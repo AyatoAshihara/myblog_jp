@@ -11,7 +11,7 @@ title = "東京の資産運用会社で働く社会人が研究に没頭する�
 
 # The URL of your site.
 # End your URL with a `/` trailing slash, e.g. `https://example.com/`.
-baseurl = "https://ayatoashihara.github.io/"
+baseurl = "https://ayatoashihara.github.io/myblog_jp/"
 publishDir = "docs"
 
 # Enter a copyright notice to display in the site footer.

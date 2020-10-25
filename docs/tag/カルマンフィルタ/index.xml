@@ -2,21 +2,21 @@
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
     <title>カルマンフィルタ | 東京の資産運用会社で働く社会人が研究に没頭するブログ</title>
-    <link>https://ayatoashihara.github.io/tag/%E3%82%AB%E3%83%AB%E3%83%9E%E3%83%B3%E3%83%95%E3%82%A3%E3%83%AB%E3%82%BF/</link>
-      <atom:link href="https://ayatoashihara.github.io/tag/%E3%82%AB%E3%83%AB%E3%83%9E%E3%83%B3%E3%83%95%E3%82%A3%E3%83%AB%E3%82%BF/index.xml" rel="self" type="application/rss+xml" />
+    <link>https://ayatoashihara.github.io/myblog_jp/tag/%E3%82%AB%E3%83%AB%E3%83%9E%E3%83%B3%E3%83%95%E3%82%A3%E3%83%AB%E3%82%BF/</link>
+      <atom:link href="https://ayatoashihara.github.io/myblog_jp/tag/%E3%82%AB%E3%83%AB%E3%83%9E%E3%83%B3%E3%83%95%E3%82%A3%E3%83%AB%E3%82%BF/index.xml" rel="self" type="application/rss+xml" />
     <description>カルマンフィルタ</description>
     <generator>Wowchemy (https://wowchemy.com)</generator><language>ja</language><lastBuildDate>Sun, 10 Feb 2019 00:00:00 +0000</lastBuildDate>
     <image>
-      <url>https://ayatoashihara.github.io/images/icon_hu0b7a4cb9992c9ac0e91bd28ffd38dd00_9727_512x512_fill_lanczos_center_2.png</url>
+      <url>https://ayatoashihara.github.io/myblog_jp/images/icon_hu0b7a4cb9992c9ac0e91bd28ffd38dd00_9727_512x512_fill_lanczos_center_2.png</url>
       <title>カルマンフィルタ</title>
-      <link>https://ayatoashihara.github.io/tag/%E3%82%AB%E3%83%AB%E3%83%9E%E3%83%B3%E3%83%95%E3%82%A3%E3%83%AB%E3%82%BF/</link>
+      <link>https://ayatoashihara.github.io/myblog_jp/tag/%E3%82%AB%E3%83%AB%E3%83%9E%E3%83%B3%E3%83%95%E3%82%A3%E3%83%AB%E3%82%BF/</link>
     </image>
     
     <item>
       <title>カルマンフィルタの実装</title>
-      <link>https://ayatoashihara.github.io/post/post3/</link>
+      <link>https://ayatoashihara.github.io/myblog_jp/post/post3/</link>
       <pubDate>Sun, 10 Feb 2019 00:00:00 +0000</pubDate>
-      <guid>https://ayatoashihara.github.io/post/post3/</guid>
+      <guid>https://ayatoashihara.github.io/myblog_jp/post/post3/</guid>
       <description>
 &lt;script src=&#34;index_files/header-attrs/header-attrs.js&#34;&gt;&lt;/script&gt;
 
@@ -481,9 +481,9 @@ a_{t|T} &amp;amp;=&amp;amp; a_{t|t} + L_{t}(a_{t+1|T} - a_{t+1|t}) \\
     
     <item>
       <title>Gianonne et. al. (2008)のマルチファクターモデルで四半期GDPを予想してみた</title>
-      <link>https://ayatoashihara.github.io/post/post6/</link>
+      <link>https://ayatoashihara.github.io/myblog_jp/post/post6/</link>
       <pubDate>Mon, 16 Jul 2018 00:00:00 +0000</pubDate>
-      <guid>https://ayatoashihara.github.io/post/post6/</guid>
+      <guid>https://ayatoashihara.github.io/myblog_jp/post/post6/</guid>
       <description>
 &lt;script src=&#34;index_files/header-attrs/header-attrs.js&#34;&gt;&lt;/script&gt;
 
