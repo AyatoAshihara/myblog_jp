@@ -1496,11 +1496,11 @@ Three
     
     <item>
       <title>ガウス回帰の実装をやってみた</title>
-      <link>https://ayatoashihara.github.io/myblog_jp/post/post1/</link>
+      <link>https://ayatoashihara.github.io/myblog_jp/post/post1/post1/</link>
       <pubDate>Sun, 02 Dec 2018 00:00:00 +0000</pubDate>
-      <guid>https://ayatoashihara.github.io/myblog_jp/post/post1/</guid>
+      <guid>https://ayatoashihara.github.io/myblog_jp/post/post1/post1/</guid>
       <description>
-&lt;script src=&#34;index_files/header-attrs/header-attrs.js&#34;&gt;&lt;/script&gt;
+&lt;script src=&#34;https://ayatoashihara.github.io/myblog_jp/myblog_jp/rmarkdown-libs/header-attrs/header-attrs.js&#34;&gt;&lt;/script&gt;
 
 
 &lt;p&gt;　おはこんばんにちは。昨日、&lt;code&gt;Bayesian Vector Autoregression&lt;/code&gt;の記事を書きました。&lt;br /&gt;
@@ -1556,7 +1556,7 @@ for(i in 1:P){
 
 # Plot
 matplot(x=X,y=Y,type = &amp;quot;l&amp;quot;,lwd = 2)&lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;&lt;img src=&#34;index_files/figure-html/unnamed-chunk-1-1.png&#34; width=&#34;672&#34; /&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://ayatoashihara.github.io/myblog_jp/myblog_jp/post/post1/post1_files/figure-html/unnamed-chunk-1-1.png&#34; width=&#34;672&#34; /&gt;&lt;/p&gt;
 &lt;p&gt;　Kernel_Matについては後述しますが、&lt;span class=&#34;math inline&#34;&gt;\(\displaystyle \textbf{y}\)&lt;/span&gt;の各要素&lt;span class=&#34;math inline&#34;&gt;\(\displaystyle y_{i} = \textbf{w}^{T}\phi(x_{i})\)&lt;/span&gt;の間の共分散行列&lt;span class=&#34;math inline&#34;&gt;\(K\)&lt;/span&gt;を入力&lt;span class=&#34;math inline&#34;&gt;\(x\)&lt;/span&gt;からカーネル法を用いて計算しています。そして、この&lt;span class=&#34;math inline&#34;&gt;\(K\)&lt;/span&gt;と平均0から、多変量正規乱数を6系列生成し、それをプロットしています。&lt;/p&gt;
 &lt;p&gt;　これらの系列は共分散行列から計算されるので、&lt;strong&gt;各要素の共分散が正に大きくなればなるほど同じ値をとりやすくなる&lt;/strong&gt;ようモデリングされていることになります。また、グラフを見ればわかるように非常になめらかなグラフが生成されており、かつ非常に柔軟な関数を表現できていることがわかります。コードでは計算コストの関係上、入力を0から10に限定して1000個の入力点をサンプルし、作図を行っていますが、原理的には&lt;span class=&#34;math inline&#34;&gt;\(x\)&lt;/span&gt;は実数空間で定義されるものであるので、&lt;span class=&#34;math inline&#34;&gt;\(p(\textbf{y})\)&lt;/span&gt;は無限次元の多変量正規分布に従います。
 以上のように、&lt;span class=&#34;math inline&#34;&gt;\(\displaystyle \textbf{y}\)&lt;/span&gt;はガウス過程に従うと仮定するので同時確率&lt;span class=&#34;math inline&#34;&gt;\(p(\textbf{y})\)&lt;/span&gt;は平均0、分散共分散行列が&lt;span class=&#34;math inline&#34;&gt;\(K\)&lt;/span&gt;の多変量正規分布&lt;span class=&#34;math inline&#34;&gt;\(N(\textbf{y}|0,K)\)&lt;/span&gt;に従います。ここで、&lt;span class=&#34;math inline&#34;&gt;\(K\)&lt;/span&gt;の各要素&lt;span class=&#34;math inline&#34;&gt;\(K_{i,j}\)&lt;/span&gt;は、&lt;/p&gt;
@@ -1633,7 +1633,7 @@ print(f(100,0.1,0,1,curve_fitting$x,curve_fitting$t), vp=viewport(layout.pos.row
 print(f(4,0.10,0,1,curve_fitting$x,curve_fitting$t), vp=viewport(layout.pos.row=1, layout.pos.col=2))
 print(f(25,0.30,0,1,curve_fitting$x,curve_fitting$t), vp=viewport(layout.pos.row=2, layout.pos.col=1))
 print(f(25,0.030,0,1,curve_fitting$x,curve_fitting$t), vp=viewport(layout.pos.row=2, layout.pos.col=2)) &lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;&lt;img src=&#34;index_files/figure-html/unnamed-chunk-2-1.png&#34; width=&#34;672&#34; /&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://ayatoashihara.github.io/myblog_jp/myblog_jp/post/post1/post1_files/figure-html/unnamed-chunk-2-1.png&#34; width=&#34;672&#34; /&gt;&lt;/p&gt;
 &lt;p&gt;&lt;span class=&#34;math inline&#34;&gt;\(\beta^{-1}\)&lt;/span&gt;は測定誤差を表しています。&lt;strong&gt;&lt;span class=&#34;math inline&#34;&gt;\(\beta\)&lt;/span&gt;が大きい（つまり、測定誤差が小さい）とすでに得られているデータとの誤差が少なくなるように予測値をはじき出すので、over fitting しやすくなります。&lt;/strong&gt;上図の左上がそうなっています。左上は&lt;span class=&#34;math inline&#34;&gt;\(\beta=400\)&lt;/span&gt;で、現時点で得られているデータに過度にfitしていることがわかります。逆に&lt;span class=&#34;math inline&#34;&gt;\(\beta\)&lt;/span&gt;が小さいと教師データとの誤差を無視するように予測値をはじき出しますが、汎化性能は向上するかもしれません。右上の図がそれです。&lt;span class=&#34;math inline&#34;&gt;\(\beta=4\)&lt;/span&gt;で、得られているデータ点を平均はほとんど通っていません。&lt;span class=&#34;math inline&#34;&gt;\(b\)&lt;/span&gt;は現時点で得られているデータが周りに及ぼす影響の広さを表しています。&lt;span class=&#34;math inline&#34;&gt;\(b\)&lt;/span&gt;が小さいと、隣接する点が互いに強く影響を及ぼし合うため、精度は下がるが汎化性能は上がるかもしれません。逆に、&lt;span class=&#34;math inline&#34;&gt;\(b\)&lt;/span&gt;が大きいと、個々の点にのみフィットする不自然な結果になります。これは右下の図になります（&lt;span class=&#34;math inline&#34;&gt;\(b=\frac{1}{0.03},\beta=25\)&lt;/span&gt;）。御覧の通り、&lt;span class=&#34;math inline&#34;&gt;\(\beta\)&lt;/span&gt;が大きいのでoverfitting気味であり、なおかつ&lt;span class=&#34;math inline&#34;&gt;\(b\)&lt;/span&gt;も大きいので個々の点のみにfitし、無茶苦茶なグラフになっています。左下のグラフが最もよさそうです。&lt;span class=&#34;math inline&#34;&gt;\(b=\frac{1}{0.3},\beta=2\)&lt;/span&gt;となっています。試しに、このグラフのx区間を[0,2]へ伸ばしてみましょう。すると、以下のようなグラフがかけます。&lt;/p&gt;
 &lt;pre class=&#34;r&#34;&gt;&lt;code&gt;grid.newpage() # make a palet
 pushViewport(viewport(layout=grid.layout(2, 2))) # divide the palet into 2 by 2
@@ -1641,7 +1641,7 @@ print(f(100,0.1,0,2,curve_fitting$x,curve_fitting$t), vp=viewport(layout.pos.row
 print(f(4,0.10,0,2,curve_fitting$x,curve_fitting$t), vp=viewport(layout.pos.row=1, layout.pos.col=2)) 
 print(f(25,0.30,0,2,curve_fitting$x,curve_fitting$t), vp=viewport(layout.pos.row=2, layout.pos.col=1))
 print(f(25,0.030,0,2,curve_fitting$x,curve_fitting$t), vp=viewport(layout.pos.row=2, layout.pos.col=2)) &lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;&lt;img src=&#34;index_files/figure-html/unnamed-chunk-3-1.png&#34; width=&#34;672&#34; /&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://ayatoashihara.github.io/myblog_jp/myblog_jp/post/post1/post1_files/figure-html/unnamed-chunk-3-1.png&#34; width=&#34;672&#34; /&gt;&lt;/p&gt;
 &lt;p&gt;これを見ればわかるように、左下以外のグラフはすぐに95%信頼区間のバンドが広がり、データ点がないところではまったく使い物にならないことがわかります。一方、左下のグラフは1.3~1.4ぐらいまではそこそこのバンドがかけており、我々が直感的に理解する関数とも整合的な点を平均値が通っているように思えます。また、観測可能なデータ点から離れすぎるとパラメータに何を与えようと平均０、分散１の正規分布になることもわかるがわかります。
 さて、このようにパラメータの値に応じて、アウトサンプルの予測精度が異なることを示したわけですが、ここで問題となるのはこれらハイパーパラメータをどのようにして推計するかです。これは対数尤度関数&lt;span class=&#34;math inline&#34;&gt;\(\ln p(\textbf{t}|a,b)\)&lt;/span&gt;を最大にするハイパーパラメータを勾配法により求めます((&lt;span class=&#34;math inline&#34;&gt;\(\beta\)&lt;/span&gt;は少しタイプが異なるようで、発展的な議論では他のチューニング方法をとる模様。まだ、そのレベルにはいけていないのでここではカリブレートすることにします。))。&lt;span class=&#34;math inline&#34;&gt;\(p(\textbf{t}) = N(\textbf{y}|0,\textbf{C}_{N})\)&lt;/span&gt;なので、対数尤度関数は&lt;/p&gt;
 &lt;p&gt;&lt;span class=&#34;math display&#34;&gt;\[
@@ -1723,7 +1723,7 @@ print(f(25,0.030,0,2,curve_fitting$x,curve_fitting$t), vp=viewport(layout.pos.ro
 }
 
 print(g(0,1,curve_fitting$x,curve_fitting$t), vp=viewport(layout.pos.row=1, layout.pos.col=1))&lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;&lt;img src=&#34;index_files/figure-html/unnamed-chunk-4-1.png&#34; width=&#34;672&#34; /&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://ayatoashihara.github.io/myblog_jp/myblog_jp/post/post1/post1_files/figure-html/unnamed-chunk-4-1.png&#34; width=&#34;672&#34; /&gt;&lt;/p&gt;
 &lt;p&gt;たしかに、良さそうな感じがします（笑）
 とりあえず、今日はここまで。&lt;/p&gt;
 &lt;/div&gt;
