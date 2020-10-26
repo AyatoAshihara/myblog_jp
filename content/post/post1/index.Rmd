@@ -6,6 +6,7 @@ categories: ["R","マクロ経済学"]
 tags: []
 draft: false
 featured: false
+slug: ["Gaussian_Regression"]
 image:
   caption: ''
   focal_point: ""
@@ -15,8 +16,10 @@ lastmod: ""
 projects: []
 summary: 万能すぎて逆に面白くないと話題のガウス回帰を実装してみました。
 output: 
-  html_document:
+  blogdown::html_page:
     toc: true
+    number_sections: false
+    df_print: "paged"
 ---
 
 ```{r setup, include=FALSE}

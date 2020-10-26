@@ -10,12 +10,14 @@
 
 [[main]]
   name = "Posts"
-  url = "../myblog_jp/post"
+#  url = "../myblog_jp/post"
+  url = "/post"
   weight = 20
 
 [[main]]
   name = "Publications"
-  url = "../myblog_jp/publication"
+#  url = "../myblog_jp/publication"
+  url = "/publication"
   weight = 40
 
 [[main]]

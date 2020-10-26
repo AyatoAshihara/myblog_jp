@@ -6,6 +6,7 @@ categories: ["R","マクロ経済学"]
 tags: []
 draft: false
 featured: false
+slug: ["Gaussian_Regression"]
 image:
   caption: ''
   focal_point: ""
@@ -15,12 +16,22 @@ lastmod: ""
 projects: []
 summary: 万能すぎて逆に面白くないと話題のガウス回帰を実装してみました。
 output: 
-  html_document:
+  blogdown::html_page:
     toc: true
+    number_sections: false
+    df_print: "paged"
 ---
 
 <script src="index_files/header-attrs/header-attrs.js"></script>
+<link href="index_files/pagedtable/css/pagedtable.css" rel="stylesheet" />
+<script src="index_files/pagedtable/js/pagedtable.js"></script>
 
+<div id="TOC">
+<ul>
+<li><a href="#gprとは">1. <code>GPR</code>とは</a></li>
+<li><a href="#gprの実装">2. <code>GPR</code>の実装</a></li>
+</ul>
+</div>
 
 <p>　おはこんばんにちは。昨日、<code>Bayesian Vector Autoregression</code>の記事を書きました。<br />
 　その中でハイパーパラメータのチューニングの話が出てきて、なにか効率的にチューニングを行う方法はないかと探していた際に<code>Bayesian Optimization</code>を発見しました。日次GDPでも機械学習の手法を利用しようと思っているので、<code>Bayesian Optimization</code>はかなり使える手法ではないかと思い、昨日徹夜で理解しました。<br />
