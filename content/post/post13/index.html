@@ -1,0 +1,233 @@
+---
+title: "Google Earth Engine APIで衛星画像データを取得し、景況感をナウキャスティングしてみる（第２回）"
+author: admin
+date: 2019-07-16T00:00:00Z
+categories: ["マクロ経済学"]
+tags: ["Python","前処理","Earth Engine","時系列解析"]
+draft: false
+featured: false
+slug: ["earth_engine"]
+image:
+  caption: ''
+  focal_point: ""
+  placement: 2
+  preview_only: false
+lastmod: ""
+projects: []
+summary: オルタナティブデータを用いた解析やってみました。
+output: 
+  blogdown::html_page:
+    number_sections: false
+    toc: true
+---
+
+<p>おはこんばんにちは。前回の記事でGoogl Earth Engineから衛星画像データを取得しました。ですが、ipygeeという素晴らしいツールがあり、より簡単に時系列データを取得できることがわかりました。今回はipygeeでデータを取得し、それを用いて景況感のナウキャスティングをやってみます。</p>
+<pre class="python"><code>import pandas as pd
+import matplotlib.pyplot as plt
+import os
+import datetime
+import ipygee
+import ee
+from sklearn.preprocessing import MinMaxScaler
+
+ee.Initialize()
+
+os.environ[&#39;QT_QPA_PLATFORM_PLUGIN_PATH&#39;] = &#39;C:/Users/aashi/Anaconda3/envs/earthengine/Library/plugins/platforms&#39;
+
+plt.style.use(&#39;ggplot&#39;)
+plt.xkcd()</code></pre>
+<pre><code>## &lt;matplotlib.rc_context object at 0x000000001EC99FD0&gt;</code></pre>
+<p>まず、FeatureCollectionとImageCollectionメソッドを使用して、日本の地理データと夜間光の衛星画像データを取得します。</p>
+<pre class="python"><code>
+start = datetime.datetime(2014,1,1)
+end = datetime.datetime(2019,1,1)
+
+japan = ee.FeatureCollection(&#39;ft:1tdSwUL7MVpOauSgRzqVTOwdfy17KDbw-1d9omPw&#39;).filter(ee.Filter.eq(&#39;Country&#39;, &#39;Japan&#39;))
+dataset = ee.ImageCollection(&#39;NOAA/VIIRS/DNB/MONTHLY_V1/VCMSLCFG&#39;).filter(ee.Filter.date(start,end)).select(&#39;avg_rad&#39;)</code></pre>
+<p>あとは、取得したImageCollectionを日本の地理データに形どり、夜間光を集計するipygee.chart.ImageのseriesByRegionメソッドを使用し、pandasデータフレームへ変換します。</p>
+<pre class="python"><code>
+chart_ts_region = ipygee.chart.Image.seriesByRegion(**{
+    &#39;imageCollection&#39;: dataset,
+    &#39;reducer&#39;: ee.Reducer.sum(),
+    &#39;regions&#39;: japan,
+    &#39;scale&#39;: 1000
+})
+
+nightjp = chart_ts_region.dataframe
+nightjp.columns = [&#39;nightlight&#39;]
+nightjp.index = nightjp.index + pd.tseries.offsets.MonthEnd(1)
+nightjp.head()</code></pre>
+<pre><code>##                nightlight
+## 2014-01-31  881528.746399
+## 2014-02-28  827364.583605
+## 2014-03-31  729127.359961
+## 2014-04-30  612680.682750
+## 2014-05-31  661449.531736</code></pre>
+<p>ここまでやってしまえば、あとはpandasデータフレームですからpythonでの解析が可能になります。そもそもeeのみでは、javascriptで使用できたui.chartメソッドを使用することができませんでした。よって、時系列データを取得するためにはee上でデータを作り、それをgoogle driveへexportし、pandas.read_csvで読み取るといったまどろっこしい作業をしなければなりませんでした。これなら関数1つで取得できますからかなり便利です。グラフにするとこんな感じです。前回取得したデータと同じようなデータが取得できています。</p>
+<pre class="python"><code>
+nightjp.plot()
+plt.show()</code></pre>
+<p><img src="/my_blog/post/post15_files/figure-html/unnamed-chunk-5-1.png" width="672" /></p>
+<p>ここからは解析に移りたいのですが、御覧の通りかなり季節性があることがわかります。どうやら冬場に光量が大きくなる傾向になるようです（そもそも日が短いので）。なので、季節調整をかけてみます。RではX-13ARIMA-SEATSをいつも使用していますが、pythonでの使い方がわからないので、statsmodels.apiのseasonal_decomposeを使います。冬場とそれ以外で挙動が異なるのでfreqは12にしてみました。</p>
+<pre class="python"><code>import statsmodels.api as sm
+nightjp_sm = sm.tsa.seasonal_decompose(nightjp[&#39;nightlight&#39;],freq=12,model=&#39;multiplicative&#39;)
+nightjp_sm.plot()
+plt.show()</code></pre>
+<p><img src="/my_blog/post/post15_files/figure-html/unnamed-chunk-6-1.png" width="672" /></p>
+<p>季節性を除いたTrendが2016年半ばくらいから2017年下旬にかけて急激に上昇しています。おそらく、景況感とはあまり相関がなさそうな動きをしていますが、以下の記事を参考にestatからAPIで鉱工業生産指数のデータを落とし、検証してみます。</p>
+<p><a href="http://sinhrks.hatenablog.com/entry/2015/12/31/222207" class="uri">http://sinhrks.hatenablog.com/entry/2015/12/31/222207</a></p>
+<pre class="python"><code>import numpy as np
+import japandas as jpd
+
+# import IIP from estat api
+dlist = jpd.DataReader(&quot;00550300&quot;, &#39;estat&#39;, appid=key)
+tables = dlist[(dlist[&#39;統計表題名及び表番号&#39;].str.contains(&#39;総合季節調整済指数【月次】 付加価値額生産&#39;)) &amp; (dlist[&#39;提供統計名及び提供分類名&#39;].str.contains(&#39;鉱工業生産・出荷・在庫指数&#39;))]
+data = jpd.DataReader(tables.iloc[0,0], &#39;estat&#39;, appid=key)
+df = data[(data[&#39;業種別&#39;].str.contains(&#39;1000000000 鉱工業&#39;)) &amp; ~(data[&#39;統計項目A_2015_Match&#39;].str.contains(&#39;付加生産ウエイト&#39;)) &amp; ~(data[&#39;統計項目A_2015_Match&#39;].str.contains(&#39;p&#39;))]
+df.index = pd.to_datetime(df[&quot;統計項目A_2015_Match&quot;], format=&quot;%Y%m&quot;) + pd.tseries.offsets.MonthEnd(1)
+df.head()
+
+# merge with seasonally adjusted nightlight data</code></pre>
+<pre><code>##                   value             業種別 統計項目A_2015_Match
+## 統計項目A_2015_Match                                        
+## 2013-01-31         94.8  1000000000 鉱工業           201301
+## 2013-02-28         96.5  1000000000 鉱工業           201302
+## 2013-03-31         97.7  1000000000 鉱工業           201303
+## 2013-04-30         97.7  1000000000 鉱工業           201304
+## 2013-05-31         99.3  1000000000 鉱工業           201305</code></pre>
+<pre class="python"><code>df2 = pd.merge(nightjp_sm.trend.to_frame(),df,how=&#39;left&#39;,left_index=True,right_index=True)[[&#39;nightlight&#39;,&#39;value&#39;]]
+df2.head()
+
+# MinMaxScaling</code></pre>
+<pre><code>##             nightlight  value
+## 2014-01-31         NaN  103.8
+## 2014-02-28         NaN  102.7
+## 2014-03-31         NaN  104.2
+## 2014-04-30         NaN   99.6
+## 2014-05-31         NaN  101.9</code></pre>
+<pre class="python"><code>scaler = MinMaxScaler()
+df2.loc[:,[&#39;nightlight&#39;,&#39;value&#39;]] = scaler.fit(df2).transform(df2)
+
+df2.plot()
+plt.show()</code></pre>
+<p><img src="/my_blog/post/post15_files/figure-html/unnamed-chunk-8-1.png" width="672" /></p>
+<p>予想に反し、かなり良い傾向を掴めていますね。季節調整を少し雑にやっているので、必要な情報もノイズとしてスクリーニングされた感がありますが、季節調整を真面目にやればかなり近い数値が出てくる気もします。ということで、X-13ARIMA-SEATSのpythonでの使い方をググりました。なんとstatsmodelsで動かせるようです。</p>
+<pre class="python"><code>
+import statsmodels as sms
+
+# x13 
+os.environ[&#39;X13PATH&#39;] = r&quot;C:\Program Files\WinX13\x13as&quot;
+x13results = sms.tsa.x13.x13_arima_analysis(endog = nightjp[&#39;nightlight&#39;],prefer_x13=True)
+x13results.plot()
+
+# merge with seasonally adjusted nightlight data
+df3 = pd.merge(x13results.seasadj.to_frame(),df,left_index=True,right_index=True)[[&#39;seasadj&#39;,&#39;value&#39;]]
+
+# MinMaxScaling
+scaler = MinMaxScaler()
+df3.loc[:,[&#39;seasadj&#39;,&#39;value&#39;]] = scaler.fit(df3).transform(df3)
+
+df3.plot()</code></pre>
+<p><img src="/my_blog/post/post15_files/figure-html/unnamed-chunk-9-1.png" width="672" /></p>
+<p>そこそこ説明力高め。これは個人的には大発見です。鉱工業生産指数はGDPとの相関が高く、月次統計でもあります。ただ、生産動向統計から作成されると言うこともあり、データが公表されるタイミングは速報値が出るのが翌月末です。一方、衛星データであれば月初から推計値を計算することが可能です。まさにナウキャスティングですね。欲を言えば、日次でデータが取れれば最高なんですけどね。多分それは有料ならできるんでしょう。。。今はこれで我慢です。（いつか使える日が来るのか？）</p>
+<p>単回帰もやってみます。</p>
+<pre class="python"><code>
+from sklearn import linear_model
+clf = linear_model.LinearRegression(normalize=False)
+
+X = df3.dropna().loc[:, [&#39;seasadj&#39;]].as_matrix()</code></pre>
+<pre><code>## C:/Users/aashi/Anaconda3/envs/earthengine/python.exe:1: FutureWarning: Method .as_matrix will be removed in a future version. Use .values instead.</code></pre>
+<pre class="python"><code>Y = df3.dropna()[&#39;value&#39;].as_matrix()
+
+clf.fit(X, Y)</code></pre>
+<pre><code>## LinearRegression(copy_X=True, fit_intercept=True, n_jobs=None,
+##          normalize=False)</code></pre>
+<pre class="python"><code>print(clf.coef_,clf.intercept_,clf.score(X, Y))</code></pre>
+<pre><code>## [0.94721098] 0.01956484094473454 0.5228197194050053</code></pre>
+<pre class="python"><code>plt.scatter(X, Y)
+ 
+plt.plot(X, clf.predict(X))</code></pre>
+<p><img src="/my_blog/post/post15_files/figure-html/unnamed-chunk-10-1.png" width="672" /></p>
+<p>ほぼほぼ比例の関係にありますね。決定係数は0.5でした。散布図を見ると非線形の関係にあるようにも見えるのでガウス回帰でそれも試してみます。</p>
+<pre class="python"><code>
+from sklearn.gaussian_process.kernels import RBF,WhiteKernel
+from sklearn.gaussian_process import GaussianProcessRegressor as GPR
+
+# kernel is RBF + white
+kernel = 1*RBF()+WhiteKernel()
+
+# estimate gp
+gp = GPR(kernel,alpha=0)
+gp.fit(X,Y)
+
+# plot</code></pre>
+<pre><code>## GaussianProcessRegressor(alpha=0, copy_X_train=True,
+##              kernel=1**2 * RBF(length_scale=1) + WhiteKernel(noise_level=1),
+##              n_restarts_optimizer=0, normalize_y=False,
+##              optimizer=&#39;fmin_l_bfgs_b&#39;, random_state=None)</code></pre>
+<pre class="python"><code>X1 = np.linspace(0,1,25000)
+plt.plot(X,Y,&#39;. &#39;)
+mu,std = gp.predict(X1.reshape(-1, 1),return_std=True)
+plt.plot(X1,mu,&#39;g&#39;)
+plt.fill_between(X1,mu-std,mu+std,alpha=0.2,color=&#39;g&#39;)
+plt.show()</code></pre>
+<p><img src="/my_blog/post/post15_files/figure-html/unnamed-chunk-11-1.png" width="672" /></p>
+<p>0.6まではほぼ直線ですが、その先で外れ値に引っ張られています。本当は0.7~0.8のところで二次関数のようにぐっと上昇して欲しいのですが。外れ値に引っ張られないよう、正規分布でなくt分布を仮定したt過程回帰で推計します。</p>
+<p>実際の推計をする前に、理論的な話をしておきます。そもそもt分布とは正規分布の分散を増減させるパラメータを新たに与え、それがガンマ分布に従うと仮定した分布です。t過程はガウス過程と同様、有限集合<span class="math inline">\(\textbf{X}\)</span>が入力として与えられた際に、関数値ベクトル<span class="math inline">\(\textbf{f}_{TP}\)</span>の分布がその多変量t分布に従うような確率分布を言います。t過程は自由度<span class="math inline">\(v\)</span>、平均関数<span class="math inline">\(\mu\)</span>、共分散関数を要素に持つ共分散行列<span class="math inline">\(\textbf{K}\)</span>をパラメータとしています。これを<span class="math inline">\(\textbf{f}_{TP}\)</span>~<span class="math inline">\(T(v,\mu(\textbf{x}),\textbf{K}(\textbf{x},\textbf{x}&#39;))\)</span>と表します。<span class="math inline">\(T(v,\mu(\textbf{x}),\textbf{K}(\textbf{x},\textbf{x}&#39;))\)</span>は先述の通り多変量t分布です。出力である確率変数<span class="math inline">\(\textbf{y}\)</span>に対して、確率密度関数は以下のように与えられます（つまり多変量t分布の密度関数）。</p>
+<p><span class="math display">\[
+T(v,\mu,\textbf{K}) = \frac{\Gamma(\frac{v+n}{2})}{((v-2)\pi)^{n/2}\Gamma(\frac{v}{2})}\frac{1}{\sqrt(\det\textbf{K})}(1+\frac{(\textbf{y}-\mu)^T\textbf{K}^{-1}(\textbf{y}-\mu)}{v-2})^{-\frac{(v+n)}2}
+\]</span></p>
+<p>ここで、<span class="math inline">\(\Gamma\)</span>はΓ関数です。ここで、<span class="math inline">\(v\to\infty\)</span>とするとカーネルの部分が、</p>
+<p><span class="math display">\[
+\lim_{v\to\infty}(1+\frac{(\textbf{y}-\mu)^T\textbf{K}^{-1}(\textbf{y}-\mu)}{v-2})^{-\frac{(v+n)}2}=\exp(\frac{(\textbf{y}-\mu)^T\textbf{K}^{-1}(\textbf{y}-\mu)}{2})
+\]</span></p>
+<p>と正規分布に収束するので、先述の通りt分布は正規分布の一般系であることがわかります。次に、今定義したt過程を使った回帰問題について考えます。学習データ<span class="math inline">\((\textbf{x}_i,y_{i})\)</span>が手元にあるとします。t過程回帰では以下のようなモデルを考えます。</p>
+<p><span class="math display">\[
+y_{i} = f_{TP}(\textbf{x}_{i}) + \epsilon_{i}
+\]</span>
+ここで、<span class="math inline">\(f_{TP}(\textbf{x}_{i})\)</span>は基底関数による入力ベクトルの特徴量、<span class="math inline">\(\epsilon_{i}-T(v,0,\sigma^2)\)</span>は観測ノイズを表しています。また、<span class="math inline">\(\textbf{f}_{TP}=[f_{TP}(\textbf{x}_{1}),...,f_{TP}(\textbf{x}_{n})]^T\)</span>と定義し、t過程に従うとします。<span class="math inline">\(\textbf{f}_{TP}\)</span>と<span class="math inline">\(\epsilon_{i}\)</span>の分布がわかっていますから、<span class="math inline">\(\textbf{x}\)</span>が既知となった後の<span class="math inline">\(\textbf{y}\)</span>の分布を計算することができます。これはガウス過程の時と同じで、2つの独立なt分布のたたみ込みになるので、<span class="math inline">\(\textbf{y}-T(v,\mu(\textbf{x}),\textbf{K}(\textbf{x},\textbf{x}&#39;)+\sigma\textbf{I})\)</span>となります。この分布を推定するには<span class="math inline">\(\mu,\textbf{K},\sigma\)</span>を推定する必要があります。まあ、だいたい<span class="math inline">\(\mu=0,\sigma=1/100\)</span>みたいに決め打ちしてしまうことが多い気がします。重要なのは<span class="math inline">\(\textbf{K}\)</span>です。これもガウス過程と同じでカーネル関数を用いることで計算の効率化を図ります。どのカーネル関数を用いるかで推定すべきパラメータの数は変わってきますからここでは大まかな推定方法について説明したいと思います。</p>
+<p>パラメータの推定方法は最尤法です。カーネル関数を<span class="math inline">\(K(\textbf{x},\textbf{x}&#39;,\beta)\)</span>と定義し、<span class="math inline">\(\beta\)</span>をパラメータとします。尤度関数は以下で与えられます。</p>
+<p><span class="math display">\[
+L(v,\mu,\textbf{K}(\textbf{x},\textbf{x}&#39;,\beta),\textbf{y}) = \frac{\Gamma(\frac{v+n}{2})}{((v-2)\pi)^{n/2}\Gamma(\frac{v}{2})}\frac{1}{\sqrt(\det\textbf{K}(\textbf{x},\textbf{x}&#39;,\beta))}(1+\frac{(\textbf{y}-\mu)^T\textbf{K}(\textbf{x},\textbf{x}&#39;,\beta)^{-1}(\textbf{y}-\mu)}{v-2})^{-\frac{(v+n)}2}
+\]</span></p>
+<p>これを最大化するような<span class="math inline">\(\beta\)</span>をPCのパワーを使って探索的に求め、最尤推定値とするのです。ここらへんもガウス過程と同じです。これで回帰推定は完了です。とりあえずここまでをpythonで実行しましょう。</p>
+<pre class="python"><code>
+import GPy
+
+kernel = GPy.kern.MLP(1, ARD=True)
+tpmodel = GPy.models.TPRegression(X.reshape(-1,1),Y.reshape(-1,1),kernel=kernel,normalizer=True)
+
+tpmodel.optimize()</code></pre>
+<pre><code>## &lt;paramz.optimization.optimization.opt_lbfgsb object at 0x00000000354B4E10&gt;</code></pre>
+<pre class="python"><code>tpmodel.plot()</code></pre>
+<pre><code>## {&#39;dataplot&#39;: [&lt;matplotlib.collections.PathCollection object at 0x00000000386A96A0&gt;], &#39;gpconfidence&#39;: [&lt;matplotlib.collections.PolyCollection object at 0x00000000386A9B38&gt;], &#39;gpmean&#39;: [[&lt;matplotlib.lines.Line2D object at 0x00000000386A94E0&gt;]]}</code></pre>
+<pre class="python"><code>plt.show()</code></pre>
+<p><img src="/my_blog/post/post15_files/figure-html/unnamed-chunk-12-1.png" width="672" /></p>
+<p>あまり、GPと変化ありませんね。ハイパーパラメータを点推定していますが、MCMCを用いてサンプリングする方法も試してみましょう。</p>
+<pre class="python"><code>
+tpmodel.randomize()
+hmc = GPy.inference.mcmc.HMC(tpmodel)
+sample = hmc.sample(num_samples=10000,hmc_iters=200)</code></pre>
+<pre><code>##  C:\Users\aashi\Anaconda3\envs\earthengine\lib\site-packages\paramz\transformations.py:111: RuntimeWarning:overflow encountered in expm1</code></pre>
+<pre class="python"><code>import seaborn as sns
+param_name = tpmodel.parameter_names()
+
+fig, ax = plt.subplots(figsize=(10,4))
+ax.set_yscale(&#39;log&#39;)
+sns.boxenplot(data=sample, ax=ax)
+ax.set_xticklabels(param_name)</code></pre>
+<pre><code>## [Text(0, 0, &#39;mlp.variance&#39;), Text(0, 0, &#39;mlp.weight_variance&#39;), Text(0, 0, &#39;mlp.bias_variance&#39;), Text(0, 0, &#39;deg_free&#39;)]</code></pre>
+<pre class="python"><code>fig.tight_layout()
+plt.show()</code></pre>
+<p><img src="/my_blog/post/post15_files/figure-html/unnamed-chunk-13-1.png" width="960" /></p>
+<pre class="python"><code>for ii in range(len(param_name)):
+    tpmodel[param_name[ii]] = np.mean(sample, axis=0)[ii]
+    tpmodel.plot()
+    plt.tight_layout()</code></pre>
+<pre><code>## {&#39;dataplot&#39;: [&lt;matplotlib.collections.PathCollection object at 0x0000000005077710&gt;], &#39;gpconfidence&#39;: [&lt;matplotlib.collections.PolyCollection object at 0x0000000005077B70&gt;], &#39;gpmean&#39;: [[&lt;matplotlib.lines.Line2D object at 0x00000000050775F8&gt;]]}
+## {&#39;dataplot&#39;: [&lt;matplotlib.collections.PathCollection object at 0x000000000521EFD0&gt;], &#39;gpconfidence&#39;: [&lt;matplotlib.collections.PolyCollection object at 0x0000000005224470&gt;], &#39;gpmean&#39;: [[&lt;matplotlib.lines.Line2D object at 0x000000000521EEB8&gt;]]}
+## {&#39;dataplot&#39;: [&lt;matplotlib.collections.PathCollection object at 0x0000000004619550&gt;], &#39;gpconfidence&#39;: [&lt;matplotlib.collections.PolyCollection object at 0x0000000004619BA8&gt;], &#39;gpmean&#39;: [[&lt;matplotlib.lines.Line2D object at 0x0000000004874470&gt;]]}
+## {&#39;dataplot&#39;: [&lt;matplotlib.collections.PathCollection object at 0x00000000045F9080&gt;], &#39;gpconfidence&#39;: [&lt;matplotlib.collections.PolyCollection object at 0x00000000045F9470&gt;], &#39;gpmean&#39;: [[&lt;matplotlib.lines.Line2D object at 0x00000000047F1D30&gt;]]}</code></pre>
+<pre class="python"><code>plt.show()</code></pre>
+<p><img src="/my_blog/post/post15_files/figure-html/unnamed-chunk-13-2.png" width="672" /></p>
+<p>うーん、0－1以外の区間の信頼性はないかも。Student t processは過学習気味になることがわかりました。</p>

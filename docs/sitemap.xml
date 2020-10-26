@@ -34,6 +34,46 @@
   
   <url>
     <loc>/categories/</loc>
+    <lastmod>2020-02-29T00:00:00+00:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>/post/post16/</loc>
+    <lastmod>2020-02-29T00:00:00+00:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>/post/</loc>
+    <lastmod>2020-02-29T00:00:00+00:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>/tag/python/</loc>
+    <lastmod>2020-02-29T00:00:00+00:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>/tags/</loc>
+    <lastmod>2020-02-29T00:00:00+00:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>/tag/%E5%89%8D%E5%87%A6%E7%90%86/</loc>
+    <lastmod>2020-02-29T00:00:00+00:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>/tag/%E6%A9%9F%E6%A2%B0%E5%AD%A6%E7%BF%92/</loc>
+    <lastmod>2020-02-29T00:00:00+00:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>/category/%E7%AB%B6%E9%A6%AC/</loc>
+    <lastmod>2020-02-29T00:00:00+00:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>/post/post14/</loc>
     <lastmod>2019-07-16T00:00:00+00:00</lastmod>
   </url>
   
@@ -48,17 +88,12 @@
   </url>
   
   <url>
-    <loc>/post/</loc>
+    <loc>/post/post13/</loc>
     <lastmod>2019-07-16T00:00:00+00:00</lastmod>
   </url>
   
   <url>
-    <loc>/tag/python/</loc>
-    <lastmod>2019-07-16T00:00:00+00:00</lastmod>
-  </url>
-  
-  <url>
-    <loc>/tags/</loc>
+    <loc>/tag/r/</loc>
     <lastmod>2019-07-16T00:00:00+00:00</lastmod>
   </url>
   
@@ -68,13 +103,13 @@
   </url>
   
   <url>
-    <loc>/tag/%E5%89%8D%E5%87%A6%E7%90%86/</loc>
+    <loc>/tag/%E6%99%82%E7%B3%BB%E5%88%97%E8%A7%A3%E6%9E%90/</loc>
     <lastmod>2019-07-16T00:00:00+00:00</lastmod>
   </url>
   
   <url>
-    <loc>/tag/r/</loc>
-    <lastmod>2019-07-13T00:00:00+00:00</lastmod>
+    <loc>/tag/%E9%87%91%E8%9E%8D/</loc>
+    <lastmod>2019-07-16T00:00:00+00:00</lastmod>
   </url>
   
   <url>
@@ -89,11 +124,6 @@
   
   <url>
     <loc>/tag/web%E3%82%B9%E3%82%AF%E3%83%AC%E3%82%A4%E3%83%92%E3%83%B3%E3%82%AF/</loc>
-    <lastmod>2019-07-13T00:00:00+00:00</lastmod>
-  </url>
-  
-  <url>
-    <loc>/category/%E7%AB%B6%E9%A6%AC/</loc>
     <lastmod>2019-07-13T00:00:00+00:00</lastmod>
   </url>
   

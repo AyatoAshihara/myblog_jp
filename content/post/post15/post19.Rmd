@@ -1,0 +1,88 @@
+---
+title: Pythonのpandas_datareaderから色々なデータを取得してみる。
+author: Ayato Ashihara
+date: '2020-01-28'
+slug: post19
+categories:
+  - 単発
+tags:
+  - Python
+  - 前処理
+output:
+  html_document
+editor_options:
+  chunk_output_type: console
+image: "http://4.bp.blogspot.com/-VkYSw_TEmRA/TyejwNXGh5I/AAAAAAAAEaM/whN4NmTcBl0/s1600/a1-giant-panda-background-3.jpg"
+---
+
+<!--more-->
+
+```{r,include=FALSE}
+
+library(reticulate)
+conda_path <- "C:\\Users\\aashi\\Anaconda3\\envs\\financialtech"
+use_condaenv(conda_path)
+
+```
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(warning = FALSE)
+knitr::opts_chunk$set(message = FALSE)
+```
+
+おはこんばんにちは。最近会社のPCにAnacondaを入れてもらいました。業務で使用することはないのですが、ワークショップで使用するので色々勉強しています。以前、Googleが提供しているEarth Engineから衛星画像を取得して解析した際にPythonを使用しましたが、今回はPythonから様々なデータが取得できるpandas_datareaderを使用したいと思います。
+
+なお、このブログではRstuioとblogdownパッケージ、gitを組み合わせてgithub上に記事を投稿しています。ですが、Rstudioとreticulateパッケージのおかげで、pythonを使用した記事もrmdで作成し、htmlとして出力できています。ここでまず、reticulateパッケージを用いてconda仮想環境へ接続する方法を紹介しておきます。
+
+```{r,eval=FALSE}
+
+library(reticulate)
+conda_path <- "C:\\Users\\hoge\\Anaconda3\\envs\\環境名"
+use_condaenv(conda_path)
+
+```
+
+これで接続できます。conda_pathには仮想環境へのパスを入力してください。
+
+```{python}
+import sys
+sys.version
+```
+
+```{python}
+
+import pandas as pd
+from matplotlib import pyplot as plt
+import pandas_datareader.data as web
+from datetime import datetime
+import seaborn as sns
+import os
+
+os.environ['QT_QPA_PLATFORM_PLUGIN_PATH'] = 'C:/Users/aashi/Anaconda3/envs/financialtech/Library/plugins/platforms'
+
+start = datetime(1980,1,1)
+end = datetime(2019,12,31)
+
+# parameters for data from econdb
+country = ['US','BR']
+indicator = ['RGDP','CPI','URATE','CA','HOU','POP','RETA','IP']
+
+# Parse API from econdb
+econ = pd.DataFrame()
+for cnty in country:
+    temp2 = pd.DataFrame()
+    for idctr in indicator:
+        temp = web.DataReader('ticker=' + idctr + cnty,'econdb',start,end)
+        temp.columns = [idctr]
+        temp2 = pd.concat([temp2,temp],join='outer',axis=1)
+    temp2 = temp2.assign(kuni=cnty,kijyundate=temp2.index)
+    econ = pd.concat([econ,temp2],join='outer')
+    econ = econ.reset_index(drop=True)
+
+sns.set
+sns.relplot(data=econ,x='kijyundate',y='IP',hue='kuni',kind='line')
+plt.show()
+
+```
+
+

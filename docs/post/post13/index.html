@@ -1,0 +1,1377 @@
+<!DOCTYPE html><html lang="ja" >
+
+<head>
+
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  
+  
+  
+  <meta name="generator" content="Wowchemy 4.8.0 for Hugo">
+  
+
+  
+
+  
+  
+
+  
+  
+  
+  
+  
+    
+    
+    
+  
+  
+
+  <meta name="author" content="Ayato Ashihara">
+
+  
+  
+  
+    
+  
+  <meta name="description" content="オルタナティブデータを用いた解析やってみました。">
+
+  
+  <link rel="alternate" hreflang="ja" href="../../post/post13/">
+
+  
+
+
+
+
+
+
+
+  
+
+
+
+
+  
+  
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  
+
+  
+  
+  
+  <meta name="theme-color" content="#2962ff">
+  
+
+  
+  
+  
+  <script src="../../js/mathjax-config.js"></script>
+  
+
+  
+  
+  
+  
+    
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.14.0/css/all.min.css" integrity="sha256-FMvZuGapsJLjouA6k7Eo2lusoAX9i0ShlWFG6qt7SLc=" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/fancybox/3.5.7/jquery.fancybox.min.css" integrity="sha256-Vzbj7sDDS/woiFS3uNKo8eIuni59rjyNGtXfstRzStA=" crossorigin="anonymous">
+
+    
+    
+    
+      
+    
+    
+      
+      
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.2.0/styles/vs2015.min.css" crossorigin="anonymous" title="hl-light">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.2.0/styles/vs2015.min.css" crossorigin="anonymous" title="hl-dark" disabled>
+      
+    
+
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/leaflet.min.css" integrity="sha512-1xoFisiGdy9nvho8EgXuXvnpR5GAMSjFwp40gSRE3NwdUdIMIKuPa7bqoUhLD0O/5tPNhteAsE5XyyMi5reQVA==" crossorigin="anonymous">
+    
+
+    
+
+    
+    
+      
+
+      
+      
+
+      
+    
+      
+
+      
+      
+
+      
+    
+      
+
+      
+      
+
+      
+    
+      
+
+      
+      
+
+      
+    
+      
+
+      
+      
+
+      
+    
+      
+
+      
+      
+
+      
+    
+      
+
+      
+      
+
+      
+    
+      
+
+      
+      
+
+      
+    
+      
+
+      
+      
+
+      
+    
+      
+
+      
+      
+
+      
+    
+      
+
+      
+      
+
+      
+    
+      
+
+      
+      
+
+      
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/lazysizes/5.2.2/lazysizes.min.js" integrity="sha512-TmDwFLhg3UA4ZG0Eb4MIyT1O1Mb+Oww5kFG0uHqXsdbyZz9DcvYQhKpGgNkamAI6h2lGGZq2X8ftOJvF/XjTUg==" crossorigin="anonymous" async></script>
+      
+    
+      
+
+      
+      
+
+      
+    
+      
+
+      
+      
+
+      
+    
+      
+
+      
+      
+
+      
+        <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js" integrity="" crossorigin="anonymous" async></script>
+      
+    
+      
+
+      
+      
+
+      
+    
+      
+
+      
+      
+
+      
+    
+
+  
+
+  
+  
+  
+    
+      
+      
+      <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Montserrat:400,700%7CRoboto:400,400italic,700%7CRoboto+Mono&display=swap">
+    
+  
+
+  
+  
+  
+  
+  <link rel="stylesheet" href="../../css/wowchemy.css">
+
+  
+
+
+
+
+  
+
+
+  
+  
+
+  
+
+  <link rel="manifest" href="../../index.webmanifest">
+  <link rel="icon" type="image/png" href="../../images/icon_hu0b7a4cb9992c9ac0e91bd28ffd38dd00_9727_32x32_fill_lanczos_center_2.png">
+  <link rel="apple-touch-icon" type="image/png" href="../../images/icon_hu0b7a4cb9992c9ac0e91bd28ffd38dd00_9727_192x192_fill_lanczos_center_2.png">
+
+  <link rel="canonical" href="../../post/post13/">
+
+  
+  
+  
+  
+  
+  
+  
+    
+  
+  
+  <meta property="twitter:card" content="summary_large_image">
+  
+  <meta property="og:site_name" content="東京の資産運用会社で働く社会人が研究に没頭するブログ">
+  <meta property="og:url" content="/post/post13/">
+  <meta property="og:title" content="Google Earth Engine APIで衛星画像データを取得し、景況感をナウキャスティングしてみる（第２回） | 東京の資産運用会社で働く社会人が研究に没頭するブログ">
+  <meta property="og:description" content="オルタナティブデータを用いた解析やってみました。"><meta property="og:image" content="/post/post13/featured.jpg">
+  <meta property="twitter:image" content="/post/post13/featured.jpg"><meta property="og:locale" content="ja">
+  
+    
+      <meta property="article:published_time" content="2019-07-16T00:00:00&#43;00:00">
+    
+    <meta property="article:modified_time" content="2019-07-16T00:00:00&#43;00:00">
+  
+
+  
+
+
+    
+
+
+
+
+
+
+  
+
+
+
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "/post/post13/"
+  },
+  "headline": "Google Earth Engine APIで衛星画像データを取得し、景況感をナウキャスティングしてみる（第２回）",
+  
+  "image": [
+    "/post/post13/featured.jpg"
+  ],
+  
+  "datePublished": "2019-07-16T00:00:00Z",
+  "dateModified": "2019-07-16T00:00:00Z",
+  
+  "author": {
+    "@type": "Person",
+    "name": "Ayato Ashihara"
+  },
+  
+  "publisher": {
+    "@type": "Organization",
+    "name": "東京の資産運用会社で働く社会人が研究に没頭するブログ",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "/images/icon_hu0b7a4cb9992c9ac0e91bd28ffd38dd00_9727_192x192_fill_lanczos_center_2.png"
+    }
+  },
+  "description": "オルタナティブデータを用いた解析やってみました。"
+}
+</script>
+
+  
+
+  
+
+
+  
+
+
+  
+
+
+
+
+
+  <title>Google Earth Engine APIで衛星画像データを取得し、景況感をナウキャスティングしてみる（第２回） | 東京の資産運用会社で働く社会人が研究に没頭するブログ</title>
+
+</head>
+
+
+<body id="top" data-spy="scroll" data-offset="70" data-target="#TableOfContents" class=" ">
+
+  
+  
+  
+    <script>window.wcDarkLightEnabled = true;</script>
+  
+  
+    <script>const isSiteThemeDark = false;</script>
+  
+  
+  <script src="../../js/load-theme.js"></script>
+
+  <aside class="search-results" id="search">
+  <div class="container">
+    <section class="search-header">
+
+      <div class="row no-gutters justify-content-between mb-3">
+        <div class="col-6">
+          <h1>Search</h1>
+        </div>
+        <div class="col-6 col-search-close">
+          <a class="js-search" href="#"><i class="fas fa-times-circle text-muted" aria-hidden="true"></i></a>
+        </div>
+      </div>
+
+      <div id="search-box">
+        
+        <input name="q" id="search-query" placeholder="検索..." autocapitalize="off"
+        autocomplete="off" autocorrect="off" spellcheck="false" type="search" class="form-control">
+        
+      </div>
+
+    </section>
+    <section class="section-search-results">
+
+      <div id="search-hits">
+        
+      </div>
+
+    </section>
+  </div>
+</aside>
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+<nav class="navbar navbar-expand-lg navbar-light compensate-for-scrollbar" id="navbar-main">
+  <div class="container">
+
+    
+    <div class="d-none d-lg-inline-flex">
+      <a class="navbar-brand" href="../../">東京の資産運用会社で働く社会人が研究に没頭するブログ</a>
+    </div>
+    
+
+    
+    <button type="button" class="navbar-toggler" data-toggle="collapse"
+            data-target="#navbar-content" aria-controls="navbar" aria-expanded="false" aria-label="ナビゲーションの切り替え">
+    <span><i class="fas fa-bars"></i></span>
+    </button>
+    
+
+    
+    <div class="navbar-brand-mobile-wrapper d-inline-flex d-lg-none">
+      <a class="navbar-brand" href="../../">東京の資産運用会社で働く社会人が研究に没頭するブログ</a>
+    </div>
+    
+
+    
+    
+    <div class="navbar-collapse main-menu-item collapse justify-content-start" id="navbar-content">
+
+      
+      <ul class="navbar-nav d-md-inline-flex">
+        
+
+        
+
+        
+        
+        
+          
+        
+
+        
+
+        
+        
+        
+        
+
+        
+          
+            
+            
+          
+          
+            
+            
+            
+              
+            
+            
+          
+        
+
+        <li class="nav-item">
+          <a class="nav-link " href="../../#about"><span>About</span></a>
+        </li>
+
+        
+        
+
+        
+
+        
+        
+        
+          
+        
+
+        
+
+        
+        
+        
+        
+
+        
+          
+            
+            
+          
+          
+        
+
+        <li class="nav-item">
+          <a class="nav-link  active" href="../../post"><span>Posts</span></a>
+        </li>
+
+        
+        
+
+        
+
+        
+        
+        
+          
+        
+
+        
+
+        
+        
+        
+        
+
+        
+          
+            
+            
+          
+          
+        
+
+        <li class="nav-item">
+          <a class="nav-link " href="../../publication"><span>Publications</span></a>
+        </li>
+
+        
+        
+
+        
+
+        
+        
+        
+          
+        
+
+        
+
+        
+        
+        
+        
+
+        
+          
+            
+            
+          
+          
+            
+            
+            
+              
+            
+            
+          
+        
+
+        <li class="nav-item">
+          <a class="nav-link " href="../../#contact"><span>Contact</span></a>
+        </li>
+
+        
+        
+
+      
+
+        
+      </ul>
+    </div>
+
+    <ul class="nav-icons navbar-nav flex-row ml-auto d-flex pl-md-2">
+      
+      
+      <li class="nav-item">
+        <a class="nav-link js-search" href="#" aria-label="Search"><i class="fas fa-search" aria-hidden="true"></i></a>
+      </li>
+      
+
+      
+      
+      <li class="nav-item dropdown theme-dropdown">
+        <a href="#" class="nav-link" data-toggle="dropdown" aria-haspopup="true">
+          <i class="fas fa-moon" aria-hidden="true"></i>
+        </a>
+        <div class="dropdown-menu">
+          <a href="#" class="dropdown-item js-set-theme-light">
+            <span>Light</span>
+          </a>
+          <a href="#" class="dropdown-item js-set-theme-dark">
+            <span>Dark</span>
+          </a>
+          <a href="#" class="dropdown-item js-set-theme-auto">
+            <span>Automatic</span>
+          </a>
+        </div>
+      </li>
+      
+
+      
+
+    </ul>
+
+  </div>
+</nav>
+
+
+
+  
+  <article class="article">
+
+    
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    
+  
+
+
+<div class="article-container pt-3">
+  <h1>Google Earth Engine APIで衛星画像データを取得し、景況感をナウキャスティングしてみる（第２回）</h1>
+
+  
+
+  
+
+
+<div class="article-metadata">
+
+  
+  
+
+  
+  <span class="article-date">
+    
+    
+      
+    
+    Jul 16, 2019
+  </span>
+  
+
+  
+
+  
+  <span class="middot-divider"></span>
+  <span class="article-reading-time">
+    9 分で読める
+  </span>
+  
+
+  
+  
+  
+
+  
+  
+  <span class="middot-divider"></span>
+  <span class="article-categories">
+    <i class="fas fa-folder mr-1"></i><a href="../../category/%E3%83%9E%E3%82%AF%E3%83%AD%E7%B5%8C%E6%B8%88%E5%AD%A6/">マクロ経済学</a></span>
+  
+
+</div>
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</div>
+
+
+<div class="article-header container featured-image-wrapper mt-4 mb-4" style="max-width: 1200px; max-height: 937px;">
+  <div style="position: relative">
+    <img src="../../post/post13/featured_hu9a9a2e03fadc1b53ca7adde2652e6048_963092_1200x0_resize_q90_lanczos.jpg" alt="" class="featured-image">
+    
+  </div>
+</div>
+
+
+
+    <div class="article-container">
+
+      <div class="article-style">
+        
+<p>おはこんばんにちは。前回の記事でGoogl Earth Engineから衛星画像データを取得しました。ですが、ipygeeという素晴らしいツールがあり、より簡単に時系列データを取得できることがわかりました。今回はipygeeでデータを取得し、それを用いて景況感のナウキャスティングをやってみます。</p>
+<pre class="python"><code>import pandas as pd
+import matplotlib.pyplot as plt
+import os
+import datetime
+import ipygee
+import ee
+from sklearn.preprocessing import MinMaxScaler
+
+ee.Initialize()
+
+os.environ[&#39;QT_QPA_PLATFORM_PLUGIN_PATH&#39;] = &#39;C:/Users/aashi/Anaconda3/envs/earthengine/Library/plugins/platforms&#39;
+
+plt.style.use(&#39;ggplot&#39;)
+plt.xkcd()</code></pre>
+<pre><code>## &lt;matplotlib.rc_context object at 0x000000001EC99FD0&gt;</code></pre>
+<p>まず、FeatureCollectionとImageCollectionメソッドを使用して、日本の地理データと夜間光の衛星画像データを取得します。</p>
+<pre class="python"><code>
+start = datetime.datetime(2014,1,1)
+end = datetime.datetime(2019,1,1)
+
+japan = ee.FeatureCollection(&#39;ft:1tdSwUL7MVpOauSgRzqVTOwdfy17KDbw-1d9omPw&#39;).filter(ee.Filter.eq(&#39;Country&#39;, &#39;Japan&#39;))
+dataset = ee.ImageCollection(&#39;NOAA/VIIRS/DNB/MONTHLY_V1/VCMSLCFG&#39;).filter(ee.Filter.date(start,end)).select(&#39;avg_rad&#39;)</code></pre>
+<p>あとは、取得したImageCollectionを日本の地理データに形どり、夜間光を集計するipygee.chart.ImageのseriesByRegionメソッドを使用し、pandasデータフレームへ変換します。</p>
+<pre class="python"><code>
+chart_ts_region = ipygee.chart.Image.seriesByRegion(**{
+    &#39;imageCollection&#39;: dataset,
+    &#39;reducer&#39;: ee.Reducer.sum(),
+    &#39;regions&#39;: japan,
+    &#39;scale&#39;: 1000
+})
+
+nightjp = chart_ts_region.dataframe
+nightjp.columns = [&#39;nightlight&#39;]
+nightjp.index = nightjp.index + pd.tseries.offsets.MonthEnd(1)
+nightjp.head()</code></pre>
+<pre><code>##                nightlight
+## 2014-01-31  881528.746399
+## 2014-02-28  827364.583605
+## 2014-03-31  729127.359961
+## 2014-04-30  612680.682750
+## 2014-05-31  661449.531736</code></pre>
+<p>ここまでやってしまえば、あとはpandasデータフレームですからpythonでの解析が可能になります。そもそもeeのみでは、javascriptで使用できたui.chartメソッドを使用することができませんでした。よって、時系列データを取得するためにはee上でデータを作り、それをgoogle driveへexportし、pandas.read_csvで読み取るといったまどろっこしい作業をしなければなりませんでした。これなら関数1つで取得できますからかなり便利です。グラフにするとこんな感じです。前回取得したデータと同じようなデータが取得できています。</p>
+<pre class="python"><code>
+nightjp.plot()
+plt.show()</code></pre>
+<p><img src="../../my_blog/post/post15_files/figure-html/unnamed-chunk-5-1.png" width="672" /></p>
+<p>ここからは解析に移りたいのですが、御覧の通りかなり季節性があることがわかります。どうやら冬場に光量が大きくなる傾向になるようです（そもそも日が短いので）。なので、季節調整をかけてみます。RではX-13ARIMA-SEATSをいつも使用していますが、pythonでの使い方がわからないので、statsmodels.apiのseasonal_decomposeを使います。冬場とそれ以外で挙動が異なるのでfreqは12にしてみました。</p>
+<pre class="python"><code>import statsmodels.api as sm
+nightjp_sm = sm.tsa.seasonal_decompose(nightjp[&#39;nightlight&#39;],freq=12,model=&#39;multiplicative&#39;)
+nightjp_sm.plot()
+plt.show()</code></pre>
+<p><img src="../../my_blog/post/post15_files/figure-html/unnamed-chunk-6-1.png" width="672" /></p>
+<p>季節性を除いたTrendが2016年半ばくらいから2017年下旬にかけて急激に上昇しています。おそらく、景況感とはあまり相関がなさそうな動きをしていますが、以下の記事を参考にestatからAPIで鉱工業生産指数のデータを落とし、検証してみます。</p>
+<p><a href="http://sinhrks.hatenablog.com/entry/2015/12/31/222207" class="uri">http://sinhrks.hatenablog.com/entry/2015/12/31/222207</a></p>
+<pre class="python"><code>import numpy as np
+import japandas as jpd
+
+# import IIP from estat api
+dlist = jpd.DataReader(&quot;00550300&quot;, &#39;estat&#39;, appid=key)
+tables = dlist[(dlist[&#39;統計表題名及び表番号&#39;].str.contains(&#39;総合季節調整済指数【月次】 付加価値額生産&#39;)) &amp; (dlist[&#39;提供統計名及び提供分類名&#39;].str.contains(&#39;鉱工業生産・出荷・在庫指数&#39;))]
+data = jpd.DataReader(tables.iloc[0,0], &#39;estat&#39;, appid=key)
+df = data[(data[&#39;業種別&#39;].str.contains(&#39;1000000000 鉱工業&#39;)) &amp; ~(data[&#39;統計項目A_2015_Match&#39;].str.contains(&#39;付加生産ウエイト&#39;)) &amp; ~(data[&#39;統計項目A_2015_Match&#39;].str.contains(&#39;p&#39;))]
+df.index = pd.to_datetime(df[&quot;統計項目A_2015_Match&quot;], format=&quot;%Y%m&quot;) + pd.tseries.offsets.MonthEnd(1)
+df.head()
+
+# merge with seasonally adjusted nightlight data</code></pre>
+<pre><code>##                   value             業種別 統計項目A_2015_Match
+## 統計項目A_2015_Match                                        
+## 2013-01-31         94.8  1000000000 鉱工業           201301
+## 2013-02-28         96.5  1000000000 鉱工業           201302
+## 2013-03-31         97.7  1000000000 鉱工業           201303
+## 2013-04-30         97.7  1000000000 鉱工業           201304
+## 2013-05-31         99.3  1000000000 鉱工業           201305</code></pre>
+<pre class="python"><code>df2 = pd.merge(nightjp_sm.trend.to_frame(),df,how=&#39;left&#39;,left_index=True,right_index=True)[[&#39;nightlight&#39;,&#39;value&#39;]]
+df2.head()
+
+# MinMaxScaling</code></pre>
+<pre><code>##             nightlight  value
+## 2014-01-31         NaN  103.8
+## 2014-02-28         NaN  102.7
+## 2014-03-31         NaN  104.2
+## 2014-04-30         NaN   99.6
+## 2014-05-31         NaN  101.9</code></pre>
+<pre class="python"><code>scaler = MinMaxScaler()
+df2.loc[:,[&#39;nightlight&#39;,&#39;value&#39;]] = scaler.fit(df2).transform(df2)
+
+df2.plot()
+plt.show()</code></pre>
+<p><img src="../../my_blog/post/post15_files/figure-html/unnamed-chunk-8-1.png" width="672" /></p>
+<p>予想に反し、かなり良い傾向を掴めていますね。季節調整を少し雑にやっているので、必要な情報もノイズとしてスクリーニングされた感がありますが、季節調整を真面目にやればかなり近い数値が出てくる気もします。ということで、X-13ARIMA-SEATSのpythonでの使い方をググりました。なんとstatsmodelsで動かせるようです。</p>
+<pre class="python"><code>
+import statsmodels as sms
+
+# x13 
+os.environ[&#39;X13PATH&#39;] = r&quot;C:\Program Files\WinX13\x13as&quot;
+x13results = sms.tsa.x13.x13_arima_analysis(endog = nightjp[&#39;nightlight&#39;],prefer_x13=True)
+x13results.plot()
+
+# merge with seasonally adjusted nightlight data
+df3 = pd.merge(x13results.seasadj.to_frame(),df,left_index=True,right_index=True)[[&#39;seasadj&#39;,&#39;value&#39;]]
+
+# MinMaxScaling
+scaler = MinMaxScaler()
+df3.loc[:,[&#39;seasadj&#39;,&#39;value&#39;]] = scaler.fit(df3).transform(df3)
+
+df3.plot()</code></pre>
+<p><img src="../../my_blog/post/post15_files/figure-html/unnamed-chunk-9-1.png" width="672" /></p>
+<p>そこそこ説明力高め。これは個人的には大発見です。鉱工業生産指数はGDPとの相関が高く、月次統計でもあります。ただ、生産動向統計から作成されると言うこともあり、データが公表されるタイミングは速報値が出るのが翌月末です。一方、衛星データであれば月初から推計値を計算することが可能です。まさにナウキャスティングですね。欲を言えば、日次でデータが取れれば最高なんですけどね。多分それは有料ならできるんでしょう。。。今はこれで我慢です。（いつか使える日が来るのか？）</p>
+<p>単回帰もやってみます。</p>
+<pre class="python"><code>
+from sklearn import linear_model
+clf = linear_model.LinearRegression(normalize=False)
+
+X = df3.dropna().loc[:, [&#39;seasadj&#39;]].as_matrix()</code></pre>
+<pre><code>## C:/Users/aashi/Anaconda3/envs/earthengine/python.exe:1: FutureWarning: Method .as_matrix will be removed in a future version. Use .values instead.</code></pre>
+<pre class="python"><code>Y = df3.dropna()[&#39;value&#39;].as_matrix()
+
+clf.fit(X, Y)</code></pre>
+<pre><code>## LinearRegression(copy_X=True, fit_intercept=True, n_jobs=None,
+##          normalize=False)</code></pre>
+<pre class="python"><code>print(clf.coef_,clf.intercept_,clf.score(X, Y))</code></pre>
+<pre><code>## [0.94721098] 0.01956484094473454 0.5228197194050053</code></pre>
+<pre class="python"><code>plt.scatter(X, Y)
+ 
+plt.plot(X, clf.predict(X))</code></pre>
+<p><img src="../../my_blog/post/post15_files/figure-html/unnamed-chunk-10-1.png" width="672" /></p>
+<p>ほぼほぼ比例の関係にありますね。決定係数は0.5でした。散布図を見ると非線形の関係にあるようにも見えるのでガウス回帰でそれも試してみます。</p>
+<pre class="python"><code>
+from sklearn.gaussian_process.kernels import RBF,WhiteKernel
+from sklearn.gaussian_process import GaussianProcessRegressor as GPR
+
+# kernel is RBF + white
+kernel = 1*RBF()+WhiteKernel()
+
+# estimate gp
+gp = GPR(kernel,alpha=0)
+gp.fit(X,Y)
+
+# plot</code></pre>
+<pre><code>## GaussianProcessRegressor(alpha=0, copy_X_train=True,
+##              kernel=1**2 * RBF(length_scale=1) + WhiteKernel(noise_level=1),
+##              n_restarts_optimizer=0, normalize_y=False,
+##              optimizer=&#39;fmin_l_bfgs_b&#39;, random_state=None)</code></pre>
+<pre class="python"><code>X1 = np.linspace(0,1,25000)
+plt.plot(X,Y,&#39;. &#39;)
+mu,std = gp.predict(X1.reshape(-1, 1),return_std=True)
+plt.plot(X1,mu,&#39;g&#39;)
+plt.fill_between(X1,mu-std,mu+std,alpha=0.2,color=&#39;g&#39;)
+plt.show()</code></pre>
+<p><img src="../../my_blog/post/post15_files/figure-html/unnamed-chunk-11-1.png" width="672" /></p>
+<p>0.6まではほぼ直線ですが、その先で外れ値に引っ張られています。本当は0.7~0.8のところで二次関数のようにぐっと上昇して欲しいのですが。外れ値に引っ張られないよう、正規分布でなくt分布を仮定したt過程回帰で推計します。</p>
+<p>実際の推計をする前に、理論的な話をしておきます。そもそもt分布とは正規分布の分散を増減させるパラメータを新たに与え、それがガンマ分布に従うと仮定した分布です。t過程はガウス過程と同様、有限集合<span class="math inline">\(\textbf{X}\)</span>が入力として与えられた際に、関数値ベクトル<span class="math inline">\(\textbf{f}_{TP}\)</span>の分布がその多変量t分布に従うような確率分布を言います。t過程は自由度<span class="math inline">\(v\)</span>、平均関数<span class="math inline">\(\mu\)</span>、共分散関数を要素に持つ共分散行列<span class="math inline">\(\textbf{K}\)</span>をパラメータとしています。これを<span class="math inline">\(\textbf{f}_{TP}\)</span>~<span class="math inline">\(T(v,\mu(\textbf{x}),\textbf{K}(\textbf{x},\textbf{x}&#39;))\)</span>と表します。<span class="math inline">\(T(v,\mu(\textbf{x}),\textbf{K}(\textbf{x},\textbf{x}&#39;))\)</span>は先述の通り多変量t分布です。出力である確率変数<span class="math inline">\(\textbf{y}\)</span>に対して、確率密度関数は以下のように与えられます（つまり多変量t分布の密度関数）。</p>
+<p><span class="math display">\[
+T(v,\mu,\textbf{K}) = \frac{\Gamma(\frac{v+n}{2})}{((v-2)\pi)^{n/2}\Gamma(\frac{v}{2})}\frac{1}{\sqrt(\det\textbf{K})}(1+\frac{(\textbf{y}-\mu)^T\textbf{K}^{-1}(\textbf{y}-\mu)}{v-2})^{-\frac{(v+n)}2}
+\]</span></p>
+<p>ここで、<span class="math inline">\(\Gamma\)</span>はΓ関数です。ここで、<span class="math inline">\(v\to\infty\)</span>とするとカーネルの部分が、</p>
+<p><span class="math display">\[
+\lim_{v\to\infty}(1+\frac{(\textbf{y}-\mu)^T\textbf{K}^{-1}(\textbf{y}-\mu)}{v-2})^{-\frac{(v+n)}2}=\exp(\frac{(\textbf{y}-\mu)^T\textbf{K}^{-1}(\textbf{y}-\mu)}{2})
+\]</span></p>
+<p>と正規分布に収束するので、先述の通りt分布は正規分布の一般系であることがわかります。次に、今定義したt過程を使った回帰問題について考えます。学習データ<span class="math inline">\((\textbf{x}_i,y_{i})\)</span>が手元にあるとします。t過程回帰では以下のようなモデルを考えます。</p>
+<p><span class="math display">\[
+y_{i} = f_{TP}(\textbf{x}_{i}) + \epsilon_{i}
+\]</span>
+ここで、<span class="math inline">\(f_{TP}(\textbf{x}_{i})\)</span>は基底関数による入力ベクトルの特徴量、<span class="math inline">\(\epsilon_{i}-T(v,0,\sigma^2)\)</span>は観測ノイズを表しています。また、<span class="math inline">\(\textbf{f}_{TP}=[f_{TP}(\textbf{x}_{1}),...,f_{TP}(\textbf{x}_{n})]^T\)</span>と定義し、t過程に従うとします。<span class="math inline">\(\textbf{f}_{TP}\)</span>と<span class="math inline">\(\epsilon_{i}\)</span>の分布がわかっていますから、<span class="math inline">\(\textbf{x}\)</span>が既知となった後の<span class="math inline">\(\textbf{y}\)</span>の分布を計算することができます。これはガウス過程の時と同じで、2つの独立なt分布のたたみ込みになるので、<span class="math inline">\(\textbf{y}-T(v,\mu(\textbf{x}),\textbf{K}(\textbf{x},\textbf{x}&#39;)+\sigma\textbf{I})\)</span>となります。この分布を推定するには<span class="math inline">\(\mu,\textbf{K},\sigma\)</span>を推定する必要があります。まあ、だいたい<span class="math inline">\(\mu=0,\sigma=1/100\)</span>みたいに決め打ちしてしまうことが多い気がします。重要なのは<span class="math inline">\(\textbf{K}\)</span>です。これもガウス過程と同じでカーネル関数を用いることで計算の効率化を図ります。どのカーネル関数を用いるかで推定すべきパラメータの数は変わってきますからここでは大まかな推定方法について説明したいと思います。</p>
+<p>パラメータの推定方法は最尤法です。カーネル関数を<span class="math inline">\(K(\textbf{x},\textbf{x}&#39;,\beta)\)</span>と定義し、<span class="math inline">\(\beta\)</span>をパラメータとします。尤度関数は以下で与えられます。</p>
+<p><span class="math display">\[
+L(v,\mu,\textbf{K}(\textbf{x},\textbf{x}&#39;,\beta),\textbf{y}) = \frac{\Gamma(\frac{v+n}{2})}{((v-2)\pi)^{n/2}\Gamma(\frac{v}{2})}\frac{1}{\sqrt(\det\textbf{K}(\textbf{x},\textbf{x}&#39;,\beta))}(1+\frac{(\textbf{y}-\mu)^T\textbf{K}(\textbf{x},\textbf{x}&#39;,\beta)^{-1}(\textbf{y}-\mu)}{v-2})^{-\frac{(v+n)}2}
+\]</span></p>
+<p>これを最大化するような<span class="math inline">\(\beta\)</span>をPCのパワーを使って探索的に求め、最尤推定値とするのです。ここらへんもガウス過程と同じです。これで回帰推定は完了です。とりあえずここまでをpythonで実行しましょう。</p>
+<pre class="python"><code>
+import GPy
+
+kernel = GPy.kern.MLP(1, ARD=True)
+tpmodel = GPy.models.TPRegression(X.reshape(-1,1),Y.reshape(-1,1),kernel=kernel,normalizer=True)
+
+tpmodel.optimize()</code></pre>
+<pre><code>## &lt;paramz.optimization.optimization.opt_lbfgsb object at 0x00000000354B4E10&gt;</code></pre>
+<pre class="python"><code>tpmodel.plot()</code></pre>
+<pre><code>## {&#39;dataplot&#39;: [&lt;matplotlib.collections.PathCollection object at 0x00000000386A96A0&gt;], &#39;gpconfidence&#39;: [&lt;matplotlib.collections.PolyCollection object at 0x00000000386A9B38&gt;], &#39;gpmean&#39;: [[&lt;matplotlib.lines.Line2D object at 0x00000000386A94E0&gt;]]}</code></pre>
+<pre class="python"><code>plt.show()</code></pre>
+<p><img src="../../my_blog/post/post15_files/figure-html/unnamed-chunk-12-1.png" width="672" /></p>
+<p>あまり、GPと変化ありませんね。ハイパーパラメータを点推定していますが、MCMCを用いてサンプリングする方法も試してみましょう。</p>
+<pre class="python"><code>
+tpmodel.randomize()
+hmc = GPy.inference.mcmc.HMC(tpmodel)
+sample = hmc.sample(num_samples=10000,hmc_iters=200)</code></pre>
+<pre><code>##  C:\Users\aashi\Anaconda3\envs\earthengine\lib\site-packages\paramz\transformations.py:111: RuntimeWarning:overflow encountered in expm1</code></pre>
+<pre class="python"><code>import seaborn as sns
+param_name = tpmodel.parameter_names()
+
+fig, ax = plt.subplots(figsize=(10,4))
+ax.set_yscale(&#39;log&#39;)
+sns.boxenplot(data=sample, ax=ax)
+ax.set_xticklabels(param_name)</code></pre>
+<pre><code>## [Text(0, 0, &#39;mlp.variance&#39;), Text(0, 0, &#39;mlp.weight_variance&#39;), Text(0, 0, &#39;mlp.bias_variance&#39;), Text(0, 0, &#39;deg_free&#39;)]</code></pre>
+<pre class="python"><code>fig.tight_layout()
+plt.show()</code></pre>
+<p><img src="../../my_blog/post/post15_files/figure-html/unnamed-chunk-13-1.png" width="960" /></p>
+<pre class="python"><code>for ii in range(len(param_name)):
+    tpmodel[param_name[ii]] = np.mean(sample, axis=0)[ii]
+    tpmodel.plot()
+    plt.tight_layout()</code></pre>
+<pre><code>## {&#39;dataplot&#39;: [&lt;matplotlib.collections.PathCollection object at 0x0000000005077710&gt;], &#39;gpconfidence&#39;: [&lt;matplotlib.collections.PolyCollection object at 0x0000000005077B70&gt;], &#39;gpmean&#39;: [[&lt;matplotlib.lines.Line2D object at 0x00000000050775F8&gt;]]}
+## {&#39;dataplot&#39;: [&lt;matplotlib.collections.PathCollection object at 0x000000000521EFD0&gt;], &#39;gpconfidence&#39;: [&lt;matplotlib.collections.PolyCollection object at 0x0000000005224470&gt;], &#39;gpmean&#39;: [[&lt;matplotlib.lines.Line2D object at 0x000000000521EEB8&gt;]]}
+## {&#39;dataplot&#39;: [&lt;matplotlib.collections.PathCollection object at 0x0000000004619550&gt;], &#39;gpconfidence&#39;: [&lt;matplotlib.collections.PolyCollection object at 0x0000000004619BA8&gt;], &#39;gpmean&#39;: [[&lt;matplotlib.lines.Line2D object at 0x0000000004874470&gt;]]}
+## {&#39;dataplot&#39;: [&lt;matplotlib.collections.PathCollection object at 0x00000000045F9080&gt;], &#39;gpconfidence&#39;: [&lt;matplotlib.collections.PolyCollection object at 0x00000000045F9470&gt;], &#39;gpmean&#39;: [[&lt;matplotlib.lines.Line2D object at 0x00000000047F1D30&gt;]]}</code></pre>
+<pre class="python"><code>plt.show()</code></pre>
+<p><img src="../../my_blog/post/post15_files/figure-html/unnamed-chunk-13-2.png" width="672" /></p>
+<p>うーん、0－1以外の区間の信頼性はないかも。Student t processは過学習気味になることがわかりました。</p>
+
+      </div>
+
+      
+
+
+
+
+
+
+<div class="article-tags">
+  
+  <a class="badge badge-light" href="../../tag/python/">Python</a>
+  
+  <a class="badge badge-light" href="../../tag/%E5%89%8D%E5%87%A6%E7%90%86/">前処理</a>
+  
+  <a class="badge badge-light" href="../../tag/earth-engine/">Earth Engine</a>
+  
+  <a class="badge badge-light" href="../../tag/%E6%99%82%E7%B3%BB%E5%88%97%E8%A7%A3%E6%9E%90/">時系列解析</a>
+  
+</div>
+
+
+
+<div class="share-box" aria-hidden="true">
+  <ul class="share">
+    
+      
+      
+      
+        
+      
+      
+      
+      <li>
+        <a href="https://twitter.com/intent/tweet?url=../../post/post13/&amp;text=Google%20Earth%20Engine%20API%e3%81%a7%e8%a1%9b%e6%98%9f%e7%94%bb%e5%83%8f%e3%83%87%e3%83%bc%e3%82%bf%e3%82%92%e5%8f%96%e5%be%97%e3%81%97%e3%80%81%e6%99%af%e6%b3%81%e6%84%9f%e3%82%92%e3%83%8a%e3%82%a6%e3%82%ad%e3%83%a3%e3%82%b9%e3%83%86%e3%82%a3%e3%83%b3%e3%82%b0%e3%81%97%e3%81%a6%e3%81%bf%e3%82%8b%ef%bc%88%e7%ac%ac%ef%bc%92%e5%9b%9e%ef%bc%89" target="_blank" rel="noopener" class="share-btn-twitter">
+          <i class="fab fa-twitter"></i>
+        </a>
+      </li>
+    
+      
+      
+      
+        
+      
+      
+      
+      <li>
+        <a href="https://www.facebook.com/sharer.php?u=/post/post13/&amp;t=Google%20Earth%20Engine%20API%e3%81%a7%e8%a1%9b%e6%98%9f%e7%94%bb%e5%83%8f%e3%83%87%e3%83%bc%e3%82%bf%e3%82%92%e5%8f%96%e5%be%97%e3%81%97%e3%80%81%e6%99%af%e6%b3%81%e6%84%9f%e3%82%92%e3%83%8a%e3%82%a6%e3%82%ad%e3%83%a3%e3%82%b9%e3%83%86%e3%82%a3%e3%83%b3%e3%82%b0%e3%81%97%e3%81%a6%e3%81%bf%e3%82%8b%ef%bc%88%e7%ac%ac%ef%bc%92%e5%9b%9e%ef%bc%89" target="_blank" rel="noopener" class="share-btn-facebook">
+          <i class="fab fa-facebook"></i>
+        </a>
+      </li>
+    
+      
+      
+      
+        
+      
+      
+      
+      <li>
+        <a href="mailto:?subject=Google%20Earth%20Engine%20API%e3%81%a7%e8%a1%9b%e6%98%9f%e7%94%bb%e5%83%8f%e3%83%87%e3%83%bc%e3%82%bf%e3%82%92%e5%8f%96%e5%be%97%e3%81%97%e3%80%81%e6%99%af%e6%b3%81%e6%84%9f%e3%82%92%e3%83%8a%e3%82%a6%e3%82%ad%e3%83%a3%e3%82%b9%e3%83%86%e3%82%a3%e3%83%b3%e3%82%b0%e3%81%97%e3%81%a6%e3%81%bf%e3%82%8b%ef%bc%88%e7%ac%ac%ef%bc%92%e5%9b%9e%ef%bc%89&amp;body=/post/post13/" target="_blank" rel="noopener" class="share-btn-email">
+          <i class="fas fa-envelope"></i>
+        </a>
+      </li>
+    
+      
+      
+      
+        
+      
+      
+      
+      <li>
+        <a href="https://www.linkedin.com/shareArticle?url=../../post/post13/&amp;title=Google%20Earth%20Engine%20API%e3%81%a7%e8%a1%9b%e6%98%9f%e7%94%bb%e5%83%8f%e3%83%87%e3%83%bc%e3%82%bf%e3%82%92%e5%8f%96%e5%be%97%e3%81%97%e3%80%81%e6%99%af%e6%b3%81%e6%84%9f%e3%82%92%e3%83%8a%e3%82%a6%e3%82%ad%e3%83%a3%e3%82%b9%e3%83%86%e3%82%a3%e3%83%b3%e3%82%b0%e3%81%97%e3%81%a6%e3%81%bf%e3%82%8b%ef%bc%88%e7%ac%ac%ef%bc%92%e5%9b%9e%ef%bc%89" target="_blank" rel="noopener" class="share-btn-linkedin">
+          <i class="fab fa-linkedin-in"></i>
+        </a>
+      </li>
+    
+      
+      
+      
+        
+      
+      
+      
+      <li>
+        <a href="whatsapp://send?text=Google%20Earth%20Engine%20API%e3%81%a7%e8%a1%9b%e6%98%9f%e7%94%bb%e5%83%8f%e3%83%87%e3%83%bc%e3%82%bf%e3%82%92%e5%8f%96%e5%be%97%e3%81%97%e3%80%81%e6%99%af%e6%b3%81%e6%84%9f%e3%82%92%e3%83%8a%e3%82%a6%e3%82%ad%e3%83%a3%e3%82%b9%e3%83%86%e3%82%a3%e3%83%b3%e3%82%b0%e3%81%97%e3%81%a6%e3%81%bf%e3%82%8b%ef%bc%88%e7%ac%ac%ef%bc%92%e5%9b%9e%ef%bc%89%20/post/post13/" target="_blank" rel="noopener" class="share-btn-whatsapp">
+          <i class="fab fa-whatsapp"></i>
+        </a>
+      </li>
+    
+      
+      
+      
+        
+      
+      
+      
+      <li>
+        <a href="https://service.weibo.com/share/share.php?url=../../post/post13/&amp;title=Google%20Earth%20Engine%20API%e3%81%a7%e8%a1%9b%e6%98%9f%e7%94%bb%e5%83%8f%e3%83%87%e3%83%bc%e3%82%bf%e3%82%92%e5%8f%96%e5%be%97%e3%81%97%e3%80%81%e6%99%af%e6%b3%81%e6%84%9f%e3%82%92%e3%83%8a%e3%82%a6%e3%82%ad%e3%83%a3%e3%82%b9%e3%83%86%e3%82%a3%e3%83%b3%e3%82%b0%e3%81%97%e3%81%a6%e3%81%bf%e3%82%8b%ef%bc%88%e7%ac%ac%ef%bc%92%e5%9b%9e%ef%bc%89" target="_blank" rel="noopener" class="share-btn-weibo">
+          <i class="fab fa-weibo"></i>
+        </a>
+      </li>
+    
+  </ul>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+
+
+
+  
+  
+  
+    
+  
+  
+  
+  <div class="media author-card content-widget-hr">
+    
+      
+      <a href="../../"><img class="avatar mr-3 avatar-circle" src="../../author/ayato-ashihara/avatar_hu77c0c0affdebd3b9cbda9c39412092b5_245163_270x270_fill_q90_lanczos_center.jpg" alt="Ayato Ashihara"></a>
+    
+
+    <div class="media-body">
+      <h5 class="card-title"><a href="../../">Ayato Ashihara</a></h5>
+      <h6 class="card-subtitle">会社員3年目</h6>
+      <p class="card-text">院卒3年目の社会人が夜な夜な更新中。本ブログの内容は筆者が所属する組織の公式見解とは全く関係ありません。</p>
+      <ul class="network-icon" aria-hidden="true">
+  
+    
+    
+    
+      
+    
+    
+    
+    
+    
+      
+    
+    <li>
+      <a href="../../#contact" >
+        <i class="fas fa-envelope"></i>
+      </a>
+    </li>
+  
+    
+    
+    
+      
+    
+    
+    
+    
+    
+      
+    
+    <li>
+      <a href="https://www.facebook.com/ASSIY" target="_blank" rel="noopener">
+        <i class="fab fa-facebook"></i>
+      </a>
+    </li>
+  
+    
+    
+    
+      
+    
+    
+    
+    
+    
+      
+    
+    <li>
+      <a href="https://github.com/AyatoAshihara/myblog_jp" target="_blank" rel="noopener">
+        <i class="fab fa-github"></i>
+      </a>
+    </li>
+  
+    
+    
+    
+      
+    
+    
+    
+    
+    
+      
+    
+    <li>
+      <a href="https://www.linkedin.com/in/%E5%BD%A9%E4%BA%BA-%E8%91%A6%E5%8E%9F-9391b7143/" target="_blank" rel="noopener">
+        <i class="fab fa-linkedin"></i>
+      </a>
+    </li>
+  
+</ul>
+
+    </div>
+  </div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <div class="article-widget content-widget-hr">
+    <h3>関連項目</h3>
+    <ul>
+      
+      <li><a href="../../post/post12/">Google Earth Engine APIで衛星画像データを取得し、景況感をナウキャスティングしてみる</a></li>
+      
+      <li><a href="../../post/post16/">LightGBMを使用して競馬結果を予想してみる</a></li>
+      
+      <li><a href="../../post/post14/">10年物長期金利をフィッティングしてみる</a></li>
+      
+      <li><a href="../../post/post11/">rvestでyahoo競馬にある過去のレース結果をスクレイピングしてみた（2回目）</a></li>
+      
+      <li><a href="../../post/post9/">rvestでyahoo競馬にある過去のレース結果をクローリングしてみた</a></li>
+      
+    </ul>
+  </div>
+  
+
+
+
+
+
+    </div>
+  </article>
+
+
+      
+
+    
+    
+    
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js" integrity="sha256-9/aliU8dGd2tb6OSsuzixeV4y/faTqgFtohetphbbj0=" crossorigin="anonymous"></script>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.imagesloaded/4.1.4/imagesloaded.pkgd.min.js" integrity="sha256-lqvxZrPLtfffUl2G/e7szqSvPBILGbwmsGE1MKlOi0Q=" crossorigin="anonymous"></script>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.isotope/3.0.6/isotope.pkgd.min.js" integrity="sha256-CBrpuqrMhXwcLLUd5tvQ4euBHCdh7wGlDfNz8vbu/iI=" crossorigin="anonymous"></script>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/fancybox/3.5.7/jquery.fancybox.min.js" integrity="sha256-yt2kYMy0w8AbtF89WXb2P1rfjcP/HTHLT7097U8Y5b8=" crossorigin="anonymous"></script>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/instant.page/5.1.0/instantpage.min.js" integrity="sha512-1+qUtKoh9XZW7j+6LhRMAyOrgSQKenQ4mluTR+cvxXjP1Z54RxZuzstR/H9kgPXQsVB8IW7DMDFUJpzLjvhGSQ==" crossorigin="anonymous"></script>
+
+      
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/mermaid/8.8.0/mermaid.min.js" integrity="sha512-ja+hSBi4JDtjSqc4LTBsSwuBT3tdZ3oKYKd07lTVYmCnTCor56AnRql00ssqnTOR9Ss4gOP/ROGB3SfcJnZkeg==" crossorigin="anonymous" title="mermaid"></script>
+      
+
+      
+        
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.2.0/highlight.min.js" integrity="sha512-TDKKr+IvoqZnPzc3l35hdjpHD0m+b2EC2SrLEgKDRWpxf2rFCxemkgvJ5kfU48ip+Y+m2XVKyOCD85ybtlZDmw==" crossorigin="anonymous"></script>
+        
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.2.0/languages/r.min.js"></script>
+        
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.2.0/languages/latex.min.js"></script>
+        
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.2.0/languages/python.min.js"></script>
+        
+      
+
+    
+
+    
+    
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/leaflet.min.js" integrity="sha512-SeiQaaDh73yrb56sTW/RgVdi/mMqNeM2oBwubFHagc5BkixSpP1fvqF47mKzPGWYSSy4RwbBunrJBQ4Co8fRWA==" crossorigin="anonymous"></script>
+    
+
+    
+    
+    <script>const code_highlighting = true;</script>
+    
+
+    
+    
+    
+    
+    
+    
+    <script>
+      const search_config = {"indexURI":"/index.json","minLength":1,"threshold":0.3};
+      const i18n = {"no_results":"結果が見つかりませんでした","placeholder":"検索...","results":"results found"};
+      const content_type = {
+        'post': "投稿",
+        'project': "プロジェクト",
+        'publication' : "発表文献",
+        'talk' : "登壇",
+        'slides' : "Slides"
+        };
+    </script>
+    
+
+    
+    
+
+    
+    
+    <script id="search-hit-fuse-template" type="text/x-template">
+      <div class="search-hit" id="summary-{{key}}">
+      <div class="search-hit-content">
+        <div class="search-hit-name">
+          <a href="{{relpermalink}}">{{title}}</a>
+          <div class="article-metadata search-hit-type">{{type}}</div>
+          <p class="search-hit-description">{{snippet}}</p>
+        </div>
+      </div>
+      </div>
+    </script>
+    
+
+    
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/fuse.js/3.2.1/fuse.min.js" integrity="sha256-VzgmKYmhsGNNN4Ph1kMW+BjoYJM2jV5i4IlFoeZA9XI=" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mark.js/8.11.1/jquery.mark.min.js" integrity="sha256-4HLtjeVgH0eIB3aZ9mLYF6E8oU5chNdjU6p6rrXpl9U=" crossorigin="anonymous"></script>
+    
+
+    
+    
+
+    
+    
+
+    
+    
+
+    
+    
+
+    
+    
+    
+    
+    
+    
+    
+    
+    
+      
+    
+    
+    
+    
+    <script src="../../js/wowchemy.min.4c2bca31150ce93c5a5e43b8a50f22fd.js"></script>
+
+    
+
+
+
+
+
+
+  
+  
+  <div class="container">
+    <footer class="site-footer">
+  
+
+  <p class="powered-by">
+    
+  </p>
+
+  
+  
+
+
+
+
+
+
+  <p class="powered-by">
+    
+    Published with
+    <a href="https://wowchemy.com" target="_blank" rel="noopener">Wowchemy</a>  —
+    the free, <a href="https://github.com/wowchemy/wowchemy-hugo-modules" target="_blank" rel="noopener">
+    open source</a> website builder that empowers creators.
+    
+
+    
+    <span class="float-right" aria-hidden="true">
+      <a href="#" class="back-to-top">
+        <span class="button_icon">
+          <i class="fas fa-chevron-up fa-2x"></i>
+        </span>
+      </a>
+    </span>
+    
+  </p>
+</footer>
+
+  </div>
+  
+
+  
+<div id="modal" class="modal fade" role="dialog">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">引用</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <pre><code class="tex hljs"></code></pre>
+      </div>
+      <div class="modal-footer">
+        <a class="btn btn-outline-primary my-1 js-copy-cite" href="#" target="_blank">
+          <i class="fas fa-copy"></i> コピー
+        </a>
+        <a class="btn btn-outline-primary my-1 js-download-cite" href="#" target="_blank">
+          <i class="fas fa-download"></i> ダウンロード
+        </a>
+        <div id="modal-error"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

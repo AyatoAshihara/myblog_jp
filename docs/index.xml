@@ -75,6 +75,528 @@
     </item>
     
     <item>
+      <title>LightGBMを使用して競馬結果を予想してみる</title>
+      <link>/post/post16/</link>
+      <pubDate>Sat, 29 Feb 2020 00:00:00 +0000</pubDate>
+      <guid>/post/post16/</guid>
+      <description>
+&lt;script src=&#34;index_files/header-attrs/header-attrs.js&#34;&gt;&lt;/script&gt;
+
+&lt;div id=&#34;TOC&#34;&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;#データインポート&#34;&gt;1.データインポート&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;#予測モデルの作成&#34;&gt;2. 予測モデルの作成&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;#shapでの結果解釈&#34;&gt;3. shapでの結果解釈&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;#最後に&#34;&gt;4. 最後に&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/div&gt;
+
+&lt;p&gt;おはこんばんにちは。かなり久しぶりではありますが、Pythonの勉強をかねて以前yahoo.keibaで収集した競馬のレース結果データから、レース結果を予想するモデルを作成したいと思います。&lt;/p&gt;
+&lt;div id=&#34;データインポート&#34; class=&#34;section level2&#34;&gt;
+&lt;h2&gt;1.データインポート&lt;/h2&gt;
+&lt;p&gt;まず、前回&lt;code&gt;sqlite&lt;/code&gt;に保存したレース結果データを&lt;code&gt;pandas&lt;/code&gt;データフレームへ保存します。&lt;/p&gt;
+&lt;pre class=&#34;python&#34;&gt;&lt;code&gt;conn = sqlite3.connect(r&amp;#39;C:\hogehoge\horse_data.db&amp;#39;)
+sql = r&amp;#39;SELECT * FROM race_result&amp;#39;
+df = pd.read_sql(con=conn,sql=sql)&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;データの中身を確認してみましょう。列は以下のようになっています。orderが着順となっています。&lt;/p&gt;
+&lt;pre class=&#34;python&#34;&gt;&lt;code&gt;df.columns&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## Index([&amp;#39;order&amp;#39;, &amp;#39;frame_number&amp;#39;, &amp;#39;horse_number&amp;#39;, &amp;#39;trainer&amp;#39;, &amp;#39;passing_rank&amp;#39;,
+##        &amp;#39;last_3F&amp;#39;, &amp;#39;time&amp;#39;, &amp;#39;margin&amp;#39;, &amp;#39;horse_name&amp;#39;, &amp;#39;horse_age&amp;#39;, &amp;#39;horse_sex&amp;#39;,
+##        &amp;#39;horse_weight&amp;#39;, &amp;#39;horse_weight_change&amp;#39;, &amp;#39;brinker&amp;#39;, &amp;#39;jockey&amp;#39;,
+##        &amp;#39;jockey_weight&amp;#39;, &amp;#39;jockey_weight_change&amp;#39;, &amp;#39;odds&amp;#39;, &amp;#39;popularity&amp;#39;,
+##        &amp;#39;race_date&amp;#39;, &amp;#39;race_course&amp;#39;, &amp;#39;race_name&amp;#39;, &amp;#39;race_distance&amp;#39;, &amp;#39;type&amp;#39;,
+##        &amp;#39;race_turn&amp;#39;, &amp;#39;race_condition&amp;#39;, &amp;#39;race_weather&amp;#39;, &amp;#39;colour&amp;#39;, &amp;#39;owner&amp;#39;,
+##        &amp;#39;farm&amp;#39;, &amp;#39;locality&amp;#39;, &amp;#39;horse_birthday&amp;#39;, &amp;#39;father&amp;#39;, &amp;#39;mother&amp;#39;, &amp;#39;prize&amp;#39;,
+##        &amp;#39;http&amp;#39;],
+##       dtype=&amp;#39;object&amp;#39;)&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;orderの中身を確認してみると、括弧（）がついている物が多く、また取消や中止、失格などが存在するため、文字型に認識されていることがわかります。ちなみに括弧（）内の順位は入線順位というやつで、他馬の走行を妨害したりして順位が降着させられたことを意味します（&lt;a href=&#34;http://www.jra.go.jp/judge/&#34; class=&#34;uri&#34;&gt;http://www.jra.go.jp/judge/&lt;/a&gt;）。&lt;/p&gt;
+&lt;pre class=&#34;python&#34;&gt;&lt;code&gt;df.loc[:,&amp;#39;order&amp;#39;].unique()&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## array([&amp;#39;1&amp;#39;, &amp;#39;7&amp;#39;, &amp;#39;2&amp;#39;, &amp;#39;8&amp;#39;, &amp;#39;5&amp;#39;, &amp;#39;15&amp;#39;, &amp;#39;6&amp;#39;, &amp;#39;12&amp;#39;, &amp;#39;11&amp;#39;, &amp;#39;14&amp;#39;, &amp;#39;3&amp;#39;, &amp;#39;13&amp;#39;,
+##        &amp;#39;4&amp;#39;, &amp;#39;16&amp;#39;, &amp;#39;9&amp;#39;, &amp;#39;10&amp;#39;, &amp;#39;取消&amp;#39;, &amp;#39;中止&amp;#39;, &amp;#39;除外&amp;#39;, &amp;#39;17&amp;#39;, &amp;#39;18&amp;#39;, &amp;#39;4(3)&amp;#39;, &amp;#39;2(1)&amp;#39;,
+##        &amp;#39;3(2)&amp;#39;, &amp;#39;6(4)&amp;#39;, &amp;#39;失格&amp;#39;, &amp;#39;9(8)&amp;#39;, &amp;#39;16(6)&amp;#39;, &amp;#39;12(12)&amp;#39;, &amp;#39;13(9)&amp;#39;, &amp;#39;6(3)&amp;#39;,
+##        &amp;#39;10(7)&amp;#39;, &amp;#39;6(5)&amp;#39;, &amp;#39;9(3)&amp;#39;, &amp;#39;11(8)&amp;#39;, &amp;#39;13(2)&amp;#39;, &amp;#39;12(9)&amp;#39;, &amp;#39;14(7)&amp;#39;,
+##        &amp;#39;10(1)&amp;#39;, &amp;#39;16(8)&amp;#39;, &amp;#39;14(6)&amp;#39;, &amp;#39;10(3)&amp;#39;, &amp;#39;12(1)&amp;#39;, &amp;#39;13(6)&amp;#39;, &amp;#39;7(1)&amp;#39;,
+##        &amp;#39;12(6)&amp;#39;, &amp;#39;6(2)&amp;#39;, &amp;#39;11(2)&amp;#39;, &amp;#39;15(6)&amp;#39;, &amp;#39;13(10)&amp;#39;, &amp;#39;14(4)&amp;#39;, &amp;#39;7(5)&amp;#39;,
+##        &amp;#39;17(4)&amp;#39;, &amp;#39;9(7)&amp;#39;, &amp;#39;16(14)&amp;#39;, &amp;#39;12(11)&amp;#39;, &amp;#39;14(2)&amp;#39;, &amp;#39;8(2)&amp;#39;, &amp;#39;9(5)&amp;#39;,
+##        &amp;#39;11(5)&amp;#39;, &amp;#39;12(7)&amp;#39;, &amp;#39;11(1)&amp;#39;, &amp;#39;12(8)&amp;#39;, &amp;#39;7(4)&amp;#39;, &amp;#39;5(4)&amp;#39;, &amp;#39;13(12)&amp;#39;,
+##        &amp;#39;14(3)&amp;#39;, &amp;#39;10(2)&amp;#39;, &amp;#39;11(10)&amp;#39;, &amp;#39;18(3)&amp;#39;, &amp;#39;10(4)&amp;#39;, &amp;#39;15(8)&amp;#39;, &amp;#39;8(3)&amp;#39;,
+##        &amp;#39;5(1)&amp;#39;, &amp;#39;10(5)&amp;#39;, &amp;#39;7(3)&amp;#39;, &amp;#39;5(2)&amp;#39;, &amp;#39;9(1)&amp;#39;, &amp;#39;13(3)&amp;#39;, &amp;#39;16(11)&amp;#39;,
+##        &amp;#39;11(3)&amp;#39;, &amp;#39;18(15)&amp;#39;, &amp;#39;11(6)&amp;#39;, &amp;#39;10(6)&amp;#39;, &amp;#39;14(12)&amp;#39;, &amp;#39;12(5)&amp;#39;, &amp;#39;15(14)&amp;#39;,
+##        &amp;#39;17(8)&amp;#39;, &amp;#39;18(6)&amp;#39;, &amp;#39;4(2)&amp;#39;, &amp;#39;18(10)&amp;#39;, &amp;#39;16(7)&amp;#39;, &amp;#39;13(1)&amp;#39;, &amp;#39;16(10)&amp;#39;,
+##        &amp;#39;15(7)&amp;#39;, &amp;#39;9(4)&amp;#39;, &amp;#39;15(5)&amp;#39;, &amp;#39;12(3)&amp;#39;, &amp;#39;8(7)&amp;#39;, &amp;#39;15(2)&amp;#39;, &amp;#39;12(10)&amp;#39;,
+##        &amp;#39;14(9)&amp;#39;, &amp;#39;3(1)&amp;#39;, &amp;#39;6(1)&amp;#39;, &amp;#39;14(5)&amp;#39;, &amp;#39;15(4)&amp;#39;, &amp;#39;11(4)&amp;#39;, &amp;#39;12(4)&amp;#39;,
+##        &amp;#39;16(4)&amp;#39;, &amp;#39;9(2)&amp;#39;, &amp;#39;13(5)&amp;#39;, &amp;#39;12(2)&amp;#39;, &amp;#39;15(1)&amp;#39;, &amp;#39;4(1)&amp;#39;, &amp;#39;14(13)&amp;#39;,
+##        &amp;#39;14(1)&amp;#39;, &amp;#39;13(7)&amp;#39;, &amp;#39;5(3)&amp;#39;, &amp;#39;8(6)&amp;#39;, &amp;#39;15(13)&amp;#39;, &amp;#39;7(2)&amp;#39;, &amp;#39;15(11)&amp;#39;,
+##        &amp;#39;10(9)&amp;#39;, &amp;#39;11(9)&amp;#39;, &amp;#39;8(4)&amp;#39;, &amp;#39;15(3)&amp;#39;, &amp;#39;13(4)&amp;#39;, &amp;#39;16(12)&amp;#39;, &amp;#39;16(5)&amp;#39;,
+##        &amp;#39;18(11)&amp;#39;, &amp;#39;10(8)&amp;#39;, &amp;#39;18(8)&amp;#39;, &amp;#39;14(8)&amp;#39;, &amp;#39;16(9)&amp;#39;, &amp;#39;8(5)&amp;#39;, &amp;#39;8(1)&amp;#39;,
+##        &amp;#39;14(11)&amp;#39;, &amp;#39;9(6)&amp;#39;, &amp;#39;16(13)&amp;#39;, &amp;#39;16(15)&amp;#39;, &amp;#39;11(11)&amp;#39;, &amp;#39;15(10)&amp;#39;, &amp;#39;7(6)&amp;#39;],
+##       dtype=object)&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;まずここを修正しましょう。括弧を除去してint型に型変更し、入線順位は新たな列&lt;code&gt;arriving order&lt;/code&gt;として追加します。&lt;/p&gt;
+&lt;pre class=&#34;python&#34;&gt;&lt;code&gt;df[&amp;#39;arriving order&amp;#39;] = df[df.order.str.contains(r&amp;#39;\d*\(\d*\)&amp;#39;,regex=True)][&amp;#39;order&amp;#39;].replace(r&amp;#39;\d+\(&amp;#39;,r&amp;#39;&amp;#39;,regex=True).replace(r&amp;#39;\)&amp;#39;,r&amp;#39;&amp;#39;,regex=True).astype(&amp;#39;float64&amp;#39;)
+df[&amp;#39;arriving order&amp;#39;].unique()&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## array([nan,  3.,  1.,  2.,  4.,  8.,  6., 12.,  9.,  7.,  5., 10., 14.,
+##        11., 15., 13.])&lt;/code&gt;&lt;/pre&gt;
+&lt;pre class=&#34;python&#34;&gt;&lt;code&gt;df[&amp;#39;order&amp;#39;] = df[&amp;#39;order&amp;#39;].replace(r&amp;#39;\(\d+\)&amp;#39;,r&amp;#39;&amp;#39;,regex=True)
+df = df[lambda df: ~df.order.str.contains(r&amp;#39;(取消|中止|除外|失格)&amp;#39;,regex=True)]&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## C:\Users\aashi\Anaconda3\envs\umanalytics\lib\site-packages\pandas\core\strings.py:1954: UserWarning: This pattern has match groups. To actually get the groups, use str.extract.
+##   return func(self, *args, **kwargs)&lt;/code&gt;&lt;/pre&gt;
+&lt;pre class=&#34;python&#34;&gt;&lt;code&gt;df[&amp;#39;order&amp;#39;] = df[&amp;#39;order&amp;#39;].astype(&amp;#39;float64&amp;#39;)
+df[&amp;#39;order&amp;#39;].unique()&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## array([ 1.,  7.,  2.,  8.,  5., 15.,  6., 12., 11., 14.,  3., 13.,  4.,
+##        16.,  9., 10., 17., 18.])&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;きれいな&lt;code&gt;float&lt;/code&gt;型に処理することができました。では、次にラスト3Fのタイムの前処理に移ります。前走のラスト3Fのタイムを予測に使用します。&lt;/p&gt;
+&lt;pre class=&#34;python&#34;&gt;&lt;code&gt;import numpy as np
+df[&amp;#39;last_3F&amp;#39;] = df[&amp;#39;last_3F&amp;#39;].replace(r&amp;#39;character(0)&amp;#39;,np.nan,regex=False).astype(&amp;#39;float64&amp;#39;)
+df[&amp;#39;last_3F&amp;#39;] = df.groupby(&amp;#39;horse_name&amp;#39;)[&amp;#39;last_3F&amp;#39;].shift(-1)&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;前走のレースと順位、追加順位もデータセットへ含めましょう。&lt;/p&gt;
+&lt;pre class=&#34;python&#34;&gt;&lt;code&gt;df[&amp;#39;prerace&amp;#39;] = df.groupby(&amp;#39;horse_name&amp;#39;)[&amp;#39;race_name&amp;#39;].shift(-1)
+df[&amp;#39;preorder&amp;#39;] = df.groupby(&amp;#39;horse_name&amp;#39;)[&amp;#39;order&amp;#39;].shift(-1)
+df[&amp;#39;prepassing&amp;#39;] = df.groupby(&amp;#39;horse_name&amp;#39;)[&amp;#39;passing_rank&amp;#39;].shift(-1)&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;出走時点で獲得している累積賞金額も追加します。&lt;/p&gt;
+&lt;pre class=&#34;python&#34;&gt;&lt;code&gt;df[&amp;#39;preprize&amp;#39;] = df.groupby(&amp;#39;horse_name&amp;#39;)[&amp;#39;prize&amp;#39;].shift(-1)
+df[&amp;#39;preprize&amp;#39;] = df[&amp;#39;preprize&amp;#39;].fillna(0)
+df[&amp;#39;margin&amp;#39;] = df.groupby(&amp;#39;horse_name&amp;#39;)[&amp;#39;margin&amp;#39;].shift(-1)&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;その他、欠損値やデータ型の修正、カテゴリデータのラベルエンコーディングです。&lt;/p&gt;
+&lt;pre class=&#34;python&#34;&gt;&lt;code&gt;df[&amp;#39;horse_weight&amp;#39;] = df[&amp;#39;horse_weight&amp;#39;].astype(&amp;#39;float64&amp;#39;)
+df[&amp;#39;margin&amp;#39;] = df[&amp;#39;margin&amp;#39;].replace(r&amp;#39;character(0)&amp;#39;,np.nan,regex=False)
+df[&amp;#39;horse_age&amp;#39;] = df[&amp;#39;horse_age&amp;#39;].astype(&amp;#39;float64&amp;#39;)
+df[&amp;#39;horse_weight_change&amp;#39;] = df[&amp;#39;horse_weight_change&amp;#39;].astype(&amp;#39;float64&amp;#39;)
+df[&amp;#39;jockey_weight&amp;#39;] = df[&amp;#39;jockey_weight&amp;#39;].astype(&amp;#39;float64&amp;#39;)
+df[&amp;#39;race_distance&amp;#39;] = df[&amp;#39;race_distance&amp;#39;].replace(r&amp;#39;m&amp;#39;,r&amp;#39;&amp;#39;,regex=True).astype(&amp;#39;float64&amp;#39;)
+df[&amp;#39;race_turn&amp;#39;] = df[&amp;#39;race_turn&amp;#39;].replace(r&amp;#39;character(0)&amp;#39;,np.nan,regex=False)
+df.loc[df[&amp;#39;order&amp;#39;]!=1,&amp;#39;order&amp;#39;] = 0
+
+df[&amp;#39;race_turn&amp;#39;] = df[&amp;#39;race_turn&amp;#39;].fillna(&amp;#39;missing&amp;#39;)
+df[&amp;#39;colour&amp;#39;] = df[&amp;#39;colour&amp;#39;].fillna(&amp;#39;missing&amp;#39;)
+df[&amp;#39;prepassing&amp;#39;] = df[&amp;#39;prepassing&amp;#39;].fillna(&amp;#39;missing&amp;#39;)
+df[&amp;#39;prerace&amp;#39;] = df[&amp;#39;prerace&amp;#39;].fillna(&amp;#39;missing&amp;#39;)
+df[&amp;#39;father&amp;#39;] = df[&amp;#39;father&amp;#39;].fillna(&amp;#39;missing&amp;#39;)
+df[&amp;#39;mother&amp;#39;] = df[&amp;#39;mother&amp;#39;].fillna(&amp;#39;missing&amp;#39;)
+
+from sklearn import preprocessing
+cat_list = [&amp;#39;trainer&amp;#39;, &amp;#39;horse_name&amp;#39;, &amp;#39;horse_sex&amp;#39;, &amp;#39;brinker&amp;#39;, &amp;#39;jockey&amp;#39;, &amp;#39;race_course&amp;#39;, &amp;#39;race_name&amp;#39;, &amp;#39;type&amp;#39;, &amp;#39;race_turn&amp;#39;, &amp;#39;race_condition&amp;#39;, &amp;#39;race_weather&amp;#39;, &amp;#39;colour&amp;#39;, &amp;#39;father&amp;#39;, &amp;#39;mother&amp;#39;, &amp;#39;prerace&amp;#39;, &amp;#39;prepassing&amp;#39;]
+for column in cat_list:
+    target_column = df[column]
+    le = preprocessing.LabelEncoder()
+    le.fit(target_column)
+    label_encoded_column = le.transform(target_column)
+    df[column] = pd.Series(label_encoded_column).astype(&amp;#39;category&amp;#39;)&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## LabelEncoder()
+## LabelEncoder()
+## LabelEncoder()
+## LabelEncoder()
+## LabelEncoder()
+## LabelEncoder()
+## LabelEncoder()
+## LabelEncoder()
+## LabelEncoder()
+## LabelEncoder()
+## LabelEncoder()
+## LabelEncoder()
+## LabelEncoder()
+## LabelEncoder()
+## LabelEncoder()
+## LabelEncoder()&lt;/code&gt;&lt;/pre&gt;
+&lt;pre class=&#34;python&#34;&gt;&lt;code&gt;import pandas_profiling as pdq
+profile = pdq.ProfileReport(df)
+profile&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;div id=&#34;予測モデルの作成&#34; class=&#34;section level2&#34;&gt;
+&lt;h2&gt;2. 予測モデルの作成&lt;/h2&gt;
+&lt;p&gt;では&lt;code&gt;LightGBM&lt;/code&gt;で予測モデルを作ってみます。&lt;code&gt;optuna&lt;/code&gt;の&lt;code&gt;LightGBM&lt;/code&gt;を使用して、ハイパーパラメータチューニングを行い、学習したモデルを用いて計算したテストデータの予測値と実績値の&lt;code&gt;confusion matrix&lt;/code&gt;ならびに正解率を算出します。&lt;/p&gt;
+&lt;pre class=&#34;python&#34;&gt;&lt;code&gt;import optuna.integration.lightgbm as lgb
+from sklearn.model_selection import train_test_split
+
+y = df[&amp;#39;order&amp;#39;]
+x = df.drop([&amp;#39;order&amp;#39;,&amp;#39;passing_rank&amp;#39;,&amp;#39;time&amp;#39;,&amp;#39;odds&amp;#39;,&amp;#39;popularity&amp;#39;,&amp;#39;owner&amp;#39;,&amp;#39;farm&amp;#39;,&amp;#39;locality&amp;#39;,&amp;#39;horse_birthday&amp;#39;,&amp;#39;http&amp;#39;,&amp;#39;prize&amp;#39;,&amp;#39;race_date&amp;#39;,&amp;#39;margin&amp;#39;],axis=1)
+
+X_train, X_test, y_train, y_test = train_test_split(x, y)
+X_train, x_val, y_train, y_val = train_test_split(X_train, y_train)
+
+lgb_train = lgb.Dataset(X_train, y_train)
+lgb_eval = lgb.Dataset(x_val, y_val)
+lgb_test = lgb.Dataset(X_test, y_test, reference=lgb_train)
+
+lgbm_params = {
+        &amp;#39;objective&amp;#39;: &amp;#39;binary&amp;#39;,
+        &amp;#39;boost_from_average&amp;#39;: False
+    }
+
+best_params, history = {}, []
+model = lgb.train(lgbm_params, lgb_train, categorical_feature = cat_list,valid_sets = lgb_eval, num_boost_round=100,early_stopping_rounds=20,best_params=best_params,tuning_history=history, verbose_eval=False)
+best_params
+
+def calibration(y_proba, beta):
+    return y_proba / (y_proba + (1 - y_proba) / beta)
+
+sampling_rate = y_train.sum() / len(y_train)
+y_proba = model.predict(X_test, num_iteration=model.best_iteration)
+y_proba_calib = calibration(y_proba, sampling_rate)
+
+y_pred = np.vectorize(lambda x: 1 if x &amp;gt; 0.49 else 0)(y_proba_calib)&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;可視化パートです。&lt;/p&gt;
+&lt;pre class=&#34;python&#34;&gt;&lt;code&gt;from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay, accuracy_score, precision_score, recall_score, f1_score, roc_curve, auc
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+# AUC (Area Under the Curve) を計算する
+fpr, tpr, thresholds = roc_curve(y_test, y_pred)
+auc = auc(fpr, tpr)
+
+# ROC曲線をプロット
+plt.plot(fpr, tpr, label=&amp;#39;ROC curve (area = %.2f)&amp;#39;%auc)
+plt.legend()
+plt.title(&amp;#39;ROC curve&amp;#39;)
+plt.xlabel(&amp;#39;False Positive Rate&amp;#39;)
+plt.ylabel(&amp;#39;True Positive Rate&amp;#39;)
+plt.grid(True)
+plt.show()&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&lt;img src=&#34;index_files/figure-html/unnamed-chunk-16-1.png&#34; width=&#34;672&#34; /&gt;&lt;/p&gt;
+&lt;pre class=&#34;python&#34;&gt;&lt;code&gt;plt.close()
+
+# Confusion Matrixを生成
+ConfusionMatrixDisplay(confusion_matrix(y_test, y_pred)).plot()&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## &amp;lt;sklearn.metrics._plot.confusion_matrix.ConfusionMatrixDisplay object at 0x000000004F319588&amp;gt;&lt;/code&gt;&lt;/pre&gt;
+&lt;pre class=&#34;python&#34;&gt;&lt;code&gt;plt.show()&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&lt;img src=&#34;index_files/figure-html/unnamed-chunk-16-2.png&#34; width=&#34;672&#34; /&gt;&lt;/p&gt;
+&lt;pre class=&#34;python&#34;&gt;&lt;code&gt;plt.close()
+
+accuracy_score(y_test, y_pred)&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## 0.9299230145444767&lt;/code&gt;&lt;/pre&gt;
+&lt;pre class=&#34;python&#34;&gt;&lt;code&gt;precision_score(y_test, y_pred)&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## 0.9329608938547486&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&lt;code&gt;accuracy_score&lt;/code&gt;（予測精度）が90%を超え、&lt;code&gt;precision_Score&lt;/code&gt;（適合率、陽=1着と予想したデータの正解率）もいい感じです。&lt;/p&gt;
+&lt;pre class=&#34;python&#34;&gt;&lt;code&gt;recall_score(y_test, y_pred)&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## 0.009844956670400282&lt;/code&gt;&lt;/pre&gt;
+&lt;pre class=&#34;python&#34;&gt;&lt;code&gt;f1_score(y_test, y_pred)&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## 0.019484307548710767&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;一方、&lt;code&gt;recall_score&lt;/code&gt;(再現性、陽=1着のサンプルのうち実際に正解した割合)が低く偽陰性が高いことが確認できます。その結果、&lt;code&gt;F1&lt;/code&gt;値も低くなっていますね。競馬予測モデルの場合、偽陰性が高いことは偽陽性が高いことよりはましなのですが、回収率を上げるためには偽陰性を下げることを頑張らなければいけません。これは今後の課題ですね。次節では&lt;code&gt;shapley&lt;/code&gt;値を使って要因分解をしたいと思います。。&lt;/p&gt;
+&lt;/div&gt;
+&lt;div id=&#34;shapでの結果解釈&#34; class=&#34;section level2&#34;&gt;
+&lt;h2&gt;3. shapでの結果解釈&lt;/h2&gt;
+&lt;pre class=&#34;python&#34;&gt;&lt;code&gt;import shap
+
+shap.initjs()&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## &amp;lt;IPython.core.display.HTML object&amp;gt;&lt;/code&gt;&lt;/pre&gt;
+&lt;pre class=&#34;python&#34;&gt;&lt;code&gt;explainer = shap.TreeExplainer(model)&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## Setting feature_perturbation = &amp;quot;tree_path_dependent&amp;quot; because no background data was given.&lt;/code&gt;&lt;/pre&gt;
+&lt;pre class=&#34;python&#34;&gt;&lt;code&gt;shap_values = explainer.shap_values(X_test)&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## LightGBM binary classifier with TreeExplainer shap values output has changed to a list of ndarray&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;まず、各特徴量の重要度を見ることにします。&lt;code&gt;summary_plot&lt;/code&gt;メソッドを使用します。&lt;/p&gt;
+&lt;pre class=&#34;python&#34;&gt;&lt;code&gt;shap.summary_plot(shap_values, X_test)&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&lt;img src=&#34;index_files/figure-html/unnamed-chunk-19-1.png&#34; width=&#34;768&#34; /&gt;&lt;/p&gt;
+&lt;p&gt;横軸は各特徴量の平均的な重要度を表しています(shap値の絶対値)。preprize(前走までの賞金獲得金額)やhorse_age、preorder(前走の着順)などが予測に重要であることが分かります。特にpreprizeの重要度は1着の予測、1着以外の予測どちらに対しても大きいです。horse_ageも同様です。ただ、これでは重要というだけで定性的な評価はできません。例えば、preprizeが大きい→1位になる確率が上昇といった関係が確認できれば、それは重要な情報になり得ます。次にそれを確認します。&lt;code&gt;summary_plot&lt;/code&gt;メソッドを使用します。&lt;/p&gt;
+&lt;pre class=&#34;python&#34;&gt;&lt;code&gt;shap.summary_plot(shap_values[1], X_test)&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&lt;img src=&#34;index_files/figure-html/unnamed-chunk-20-1.png&#34; width=&#34;768&#34; /&gt;&lt;/p&gt;
+&lt;p&gt;上図も各特徴量の重要度を表しています(今回は絶対値ではありません)。今回はそれぞれの特徴量の重要度がバイオリンプロットによって表されており、かつ特徴量の値の大きさで色分けがされています。例えば、preprizeだと横軸が0以上の部分でのみ赤色の分布が発生しており、ここからpreprizeの特徴量が大きい、つまり前走までの獲得賞金額が多いと平均的に1着の確率が上がるという当たり前の解釈をすることができます。
+他にも、horse_age,preorder,last_3Fは特徴量が小さくなるほど1着になる確率があがることも読み取れます。horse_weight, jokey_weightは大きくなるほど1着になる確率が上がるようです。一方、その他は特に定性的な関係を読み取ることはできません。&lt;/p&gt;
+&lt;p&gt;次に、特徴量と確率の関係をより詳しく確認してみましょう。先ほど、preprizeは特徴量が大きくなるほど1着になる確率が上昇するということがわかりました。ただ、その確率の上昇は1次関数的に増加するのか、指数的に増大するのか、それとも&lt;span class=&#34;math inline&#34;&gt;\(\log x\)&lt;/span&gt;のように逓減していくのか、わかりません。&lt;code&gt;dependence_plot&lt;/code&gt;を使用してそれを確認してみましょう。&lt;/p&gt;
+&lt;pre class=&#34;python&#34;&gt;&lt;code&gt;shap.dependence_plot(ind=&amp;quot;preprize&amp;quot;, shap_values=shap_values[1], features=X_test)&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&lt;img src=&#34;index_files/figure-html/unnamed-chunk-21-1.png&#34; width=&#34;720&#34; /&gt;&lt;/p&gt;
+&lt;p&gt;上図は学習した&lt;code&gt;LightGBM&lt;/code&gt;をpreprizeの関数として見たときの概形をplotしたものです。先に確認したとおり、やはり特徴量が大きくなるにつれ、1着になる確率が上昇していきます。ただ、その上昇は徐々に逓減していき、2000万円を超えるところでほぼ頭打ちとなります。また、上図ではhorse_ageでの色分けを行っており、preprizeとの関係性も確認できるようになっています。やはり、直感と同じく、preprizeが高い馬の中でもhorse_ageが若い馬の1着確率が高くなることが見て取れます。&lt;/p&gt;
+&lt;p&gt;preorderの&lt;code&gt;dependence_plot&lt;/code&gt;も確認してみましょう。&lt;/p&gt;
+&lt;pre class=&#34;python&#34;&gt;&lt;code&gt;shap.dependence_plot(ind=&amp;quot;preorder&amp;quot;, shap_values=shap_values[1], features=X_test)&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&lt;img src=&#34;index_files/figure-html/unnamed-chunk-22-1.png&#34; width=&#34;720&#34; /&gt;&lt;/p&gt;
+&lt;p&gt;やはり、前走の着順が上位になるほど1着確率が高まることがここからも分かります。また、その確率は6着以上とそれ以外で水準感が変わることも分かります。last_3Fのタイムとの関係性も確認していますが、こちらはあまり関連性はなさそうです。&lt;/p&gt;
+&lt;/div&gt;
+&lt;div id=&#34;最後に&#34; class=&#34;section level2&#34;&gt;
+&lt;h2&gt;4. 最後に&lt;/h2&gt;
+&lt;p&gt;&lt;code&gt;LightGBM&lt;/code&gt;を使用し、競馬の予測モデルを作成してみました。さすが&lt;code&gt;LightGBM&lt;/code&gt;といった感じで、予測精度は高かったです。また、&lt;code&gt;shap&lt;/code&gt;値を使用した重要特徴量の検出も上手くいきました。これによって、&lt;code&gt;LightGBM&lt;/code&gt;の気持ちを理解し、より良い特徴量の発見を進めていくことでモデリングの精度を高めていこうと思います。&lt;/p&gt;
+&lt;/div&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>10年物長期金利をフィッティングしてみる</title>
+      <link>/post/post14/</link>
+      <pubDate>Tue, 16 Jul 2019 00:00:00 +0000</pubDate>
+      <guid>/post/post14/</guid>
+      <description>
+&lt;script src=&#34;index_files/header-attrs/header-attrs.js&#34;&gt;&lt;/script&gt;
+
+&lt;div id=&#34;TOC&#34;&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;#データ収集&#34;&gt;1. データ収集&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;#月次解析パート&#34;&gt;2. 月次解析パート&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;#日次解析パート&#34;&gt;3. 日次解析パート&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/div&gt;
+
+&lt;p&gt;おはこんばんにちは。とある理由で10年物長期金利のフィッティングを行いたいと思いました。というわけで、USデータを用いて解析していきます。まず、データを収集しましょう。&lt;code&gt;quantmod&lt;/code&gt;パッケージを用いて、FREDからデータを落とします。&lt;code&gt;getsymbols(キー,from=開始日,src=&#34;FRED&#34;, auto.assign=TRUE)&lt;/code&gt;で簡単にできちゃいます。ちなみにキーはFREDのHPで確認できます。&lt;/p&gt;
+&lt;div id=&#34;データ収集&#34; class=&#34;section level2&#34;&gt;
+&lt;h2&gt;1. データ収集&lt;/h2&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;library(quantmod)
+
+# data name collected
+symbols.name &amp;lt;- c(&amp;quot;10-Year Treasury Constant Maturity Rate&amp;quot;,&amp;quot;Effective Federal Funds Rate&amp;quot;,&amp;quot;
+Consumer Price Index for All Urban Consumers: All Items&amp;quot;,&amp;quot;Civilian Unemployment Rate&amp;quot;,&amp;quot;3-Month Treasury Bill: Secondary Market Rate&amp;quot;,&amp;quot;Industrial Production Index&amp;quot;,&amp;quot;
+10-Year Breakeven Inflation Rate&amp;quot;,&amp;quot;Trade Weighted U.S. Dollar Index: Broad, Goods&amp;quot;,&amp;quot;
+Smoothed U.S. Recession Probabilities&amp;quot;,&amp;quot;Moody&amp;#39;s Seasoned Baa Corporate Bond Yield&amp;quot;,&amp;quot;5-Year, 5-Year Forward Inflation Expectation Rate&amp;quot;,&amp;quot;Personal Consumption Expenditures&amp;quot;)
+
+# Collect economic data
+symbols &amp;lt;- c(&amp;quot;GS10&amp;quot;,&amp;quot;FEDFUNDS&amp;quot;,&amp;quot;CPIAUCSL&amp;quot;,&amp;quot;UNRATE&amp;quot;,&amp;quot;TB3MS&amp;quot;,&amp;quot;INDPRO&amp;quot;,&amp;quot;T10YIEM&amp;quot;,&amp;quot;TWEXBMTH&amp;quot;,&amp;quot;RECPROUSM156N&amp;quot;,&amp;quot;BAA&amp;quot;,&amp;quot;T5YIFRM&amp;quot;,&amp;quot;PCE&amp;quot;)
+getSymbols(symbols, from = &amp;#39;1980-01-01&amp;#39;, src = &amp;quot;FRED&amp;quot;, auto.assign = TRUE)&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;##  [1] &amp;quot;GS10&amp;quot;          &amp;quot;FEDFUNDS&amp;quot;      &amp;quot;CPIAUCSL&amp;quot;      &amp;quot;UNRATE&amp;quot;       
+##  [5] &amp;quot;TB3MS&amp;quot;         &amp;quot;INDPRO&amp;quot;        &amp;quot;T10YIEM&amp;quot;       &amp;quot;TWEXBMTH&amp;quot;     
+##  [9] &amp;quot;RECPROUSM156N&amp;quot; &amp;quot;BAA&amp;quot;           &amp;quot;T5YIFRM&amp;quot;       &amp;quot;PCE&amp;quot;&lt;/code&gt;&lt;/pre&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;macro_indicator &amp;lt;- merge(GS10,FEDFUNDS,CPIAUCSL,UNRATE,TB3MS,INDPRO,T10YIEM,TWEXBMTH,RECPROUSM156N,BAA,T5YIFRM,PCE)
+rm(GS10,FEDFUNDS,CPIAUCSL,UNRATE,TB3MS,INDPRO,T10YIEM,TWEXBMTH,RECPROUSM156N,BAA,T5YIFRM,PCE,USEPUINDXD)&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;div id=&#34;月次解析パート&#34; class=&#34;section level2&#34;&gt;
+&lt;h2&gt;2. 月次解析パート&lt;/h2&gt;
+&lt;p&gt;データは
+&lt;a href=&#34;htmlwidget/macro_indicator.html&#34;&gt;こちら&lt;/a&gt;
+から参照できます。では、推計用のデータセットを作成していきます。被説明変数は&lt;code&gt;10-Year Treasury Constant Maturity Rate(GS10)&lt;/code&gt;です。説明変数は以下の通りです。&lt;/p&gt;
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr class=&#34;header&#34;&gt;
+&lt;th&gt;説明変数名&lt;/th&gt;
+&lt;th&gt;キー&lt;/th&gt;
+&lt;th&gt;代理変数&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr class=&#34;odd&#34;&gt;
+&lt;td&gt;Federal Funds Rate&lt;/td&gt;
+&lt;td&gt;FEDFUNDS&lt;/td&gt;
+&lt;td&gt;短期金利&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr class=&#34;even&#34;&gt;
+&lt;td&gt;Consumer Price Index&lt;/td&gt;
+&lt;td&gt;CPIAUCSL&lt;/td&gt;
+&lt;td&gt;物価&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr class=&#34;odd&#34;&gt;
+&lt;td&gt;Unemployment Rate&lt;/td&gt;
+&lt;td&gt;UNRATE&lt;/td&gt;
+&lt;td&gt;雇用関連&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr class=&#34;even&#34;&gt;
+&lt;td&gt;3-Month Treasury Bill&lt;/td&gt;
+&lt;td&gt;TB3MS&lt;/td&gt;
+&lt;td&gt;短期金利&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr class=&#34;odd&#34;&gt;
+&lt;td&gt;Industrial Production Index&lt;/td&gt;
+&lt;td&gt;INDPRO&lt;/td&gt;
+&lt;td&gt;景気&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr class=&#34;even&#34;&gt;
+&lt;td&gt;Breakeven Inflation Rate&lt;/td&gt;
+&lt;td&gt;T10YIEM&lt;/td&gt;
+&lt;td&gt;物価&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr class=&#34;odd&#34;&gt;
+&lt;td&gt;Trade Weighted Dollar Index&lt;/td&gt;
+&lt;td&gt;TWEXBMTH&lt;/td&gt;
+&lt;td&gt;為替&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr class=&#34;even&#34;&gt;
+&lt;td&gt;Recession Probabilities&lt;/td&gt;
+&lt;td&gt;RECPROUSM156N&lt;/td&gt;
+&lt;td&gt;景気&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr class=&#34;odd&#34;&gt;
+&lt;td&gt;Moody’s Seasoned Baa Corporate Bond Yield&lt;/td&gt;
+&lt;td&gt;BAA&lt;/td&gt;
+&lt;td&gt;リスクプレミアム&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr class=&#34;even&#34;&gt;
+&lt;td&gt;Inflation Expectation Rate&lt;/td&gt;
+&lt;td&gt;T5YIFRM&lt;/td&gt;
+&lt;td&gt;物価&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr class=&#34;odd&#34;&gt;
+&lt;td&gt;Personal Consumption Expenditures&lt;/td&gt;
+&lt;td&gt;PCE&lt;/td&gt;
+&lt;td&gt;景気&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr class=&#34;even&#34;&gt;
+&lt;td&gt;Economic Policy Uncertainty Index&lt;/td&gt;
+&lt;td&gt;USEPUINDXD&lt;/td&gt;
+&lt;td&gt;政治&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;p&gt;かなり適当な変数選択ではあるんですが、マクロモデリング的に長期金利ってどうやってモデル化するかというとちゃんとやってない場合が多いです。DSGEでは効率市場仮説に従って10年先までの短期金利のパスをリンクしたものと長期金利が等しくなると定式化するのが院生時代のモデリングでした（マクロファイナンスの界隈ではちゃんとやってそう）。そういうわけで、短期金利を説明変数に加えています。そして、短期金利に影響を与えるであろう物価にかかる指標も3つ追加しました。加えて、景気との相関が強いことはよく知られているので景気に関するデータも追加しました。これらはそもそもマクロモデルでは短期金利は以下のようなテイラールールに従うとモデリングすることが一般的であることが背景にあります。&lt;/p&gt;
+&lt;p&gt;&lt;span class=&#34;math display&#34;&gt;\[
+r_t = \rho r_{t-1} + \alpha \pi_{t} + \beta y_{t}
+\]&lt;/span&gt;
+ここで、&lt;span class=&#34;math inline&#34;&gt;\(r_t\)&lt;/span&gt;は政策金利（短期金利）、&lt;span class=&#34;math inline&#34;&gt;\(\pi_t\)&lt;/span&gt;はインフレ率、&lt;span class=&#34;math inline&#34;&gt;\(y_t\)&lt;/span&gt;はoutputです。&lt;span class=&#34;math inline&#34;&gt;\(\rho, \alpha, \beta\)&lt;/span&gt;はdeep parameterと呼ばれるもので、それぞれ慣性、インフレ率への金利の感応度、outputに対する感応度を表しています。&lt;span class=&#34;math inline&#34;&gt;\(\rho=0,\beta=0\)&lt;/span&gt;の時、&lt;span class=&#34;math inline&#34;&gt;\(\alpha&amp;gt;=1\)&lt;/span&gt;でなければ合理的期待均衡解が得られないことは「テイラーの原理」として有名です。
+その他、Corporate bondとの裁定関係も存在しそうな&lt;code&gt;Moody&#39;s Seasoned Baa Corporate Bond Yield&lt;/code&gt;も説明変数に追加しています。また、欲を言えば&lt;code&gt;VIX&lt;/code&gt;指数と財政に関する指標を追加したいところです。財政に関する指数はQuateryかAnnualyなので今回のようなmonthlyの推計には使用することができません。この部分は最もネックなところです。なにか考え付いたら再推計します。&lt;/p&gt;
+&lt;p&gt;では、推計に入ります。今回は説明変数が多いので&lt;code&gt;lasso&lt;/code&gt;回帰を行い、有効な変数を絞り込みたいと思います。また、比較のために&lt;code&gt;OLS&lt;/code&gt;もやります。説明変数は被説明変数の1期前の値を使用します。おそらく、1期前でもデータの公表時期によっては翌月の推計に間に合わない可能性もありますが、とりあえずこれでやってみます。&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;# make dataset
+traindata &amp;lt;- na.omit(merge(macro_indicator[&amp;quot;2003-01-01::2015-12-31&amp;quot;][,1],stats::lag(macro_indicator[&amp;quot;2003-01-01::2015-12-31&amp;quot;][,-1],1)))
+testdata  &amp;lt;- na.omit(merge(macro_indicator[&amp;quot;2016-01-01::&amp;quot;][,1],stats::lag(macro_indicator[&amp;quot;2016-01-01::&amp;quot;][,-1],1)))
+
+# fitting OLS
+trial1 &amp;lt;- lm(GS10~.,data = traindata)
+summary(trial1)&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## 
+## Call:
+## lm(formula = GS10 ~ ., data = traindata)
+## 
+## Residuals:
+##      Min       1Q   Median       3Q      Max 
+## -0.76208 -0.21234  0.00187  0.21595  0.70493 
+## 
+## Coefficients:
+##                 Estimate Std. Error t value Pr(&amp;gt;|t|)    
+## (Intercept)   14.3578405  4.3524691   3.299 0.001226 ** 
+## FEDFUNDS      -0.2011132  0.1438774  -1.398 0.164335    
+## CPIAUCSL      -0.0702011  0.0207761  -3.379 0.000938 ***
+## UNRATE        -0.2093502  0.0796052  -2.630 0.009477 ** 
+## TB3MS          0.2970160  0.1413796   2.101 0.037410 *  
+## INDPRO        -0.0645376  0.0260343  -2.479 0.014339 *  
+## T10YIEM        1.1484487  0.1769925   6.489 1.32e-09 ***
+## TWEXBMTH      -0.0317345  0.0118155  -2.686 0.008091 ** 
+## RECPROUSM156N -0.0099083  0.0021021  -4.713 5.72e-06 ***
+## BAA            0.7793520  0.0868628   8.972 1.49e-15 ***
+## T5YIFRM       -0.4551318  0.1897695  -2.398 0.017759 *  
+## PCE            0.0009087  0.0002475   3.672 0.000339 ***
+## ---
+## Signif. codes:  0 &amp;#39;***&amp;#39; 0.001 &amp;#39;**&amp;#39; 0.01 &amp;#39;*&amp;#39; 0.05 &amp;#39;.&amp;#39; 0.1 &amp;#39; &amp;#39; 1
+## 
+## Residual standard error: 0.2981 on 143 degrees of freedom
+## Multiple R-squared:  0.9203, Adjusted R-squared:  0.9142 
+## F-statistic: 150.1 on 11 and 143 DF,  p-value: &amp;lt; 2.2e-16&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;自由度修正済み決定係数高めですね。2015/12/31までのモデルを使って、アウトサンプルのデータ(2016/01/01~)を予測し、平均二乗誤差を計算します。&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;est.OLS.Y &amp;lt;- predict(trial1,testdata[,-1])
+Y &amp;lt;- as.matrix(testdata[,1])
+mse.OLS &amp;lt;- sum((Y - est.OLS.Y)^2) / length(Y)
+mse.OLS&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## [1] 0.1431734&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;次に&lt;code&gt;lasso&lt;/code&gt;回帰です。Cross Validationを行い、&lt;span class=&#34;math inline&#34;&gt;\(\lambda\)&lt;/span&gt;を決める&lt;code&gt;glmnet&lt;/code&gt;パッケージの&lt;code&gt;cv.glmnet&lt;/code&gt;関数を使用します。&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;# fitting lasso regression
+library(glmnet)
+trial2 &amp;lt;- cv.glmnet(as.matrix(traindata[,-1]),as.matrix(traindata[,1]),family=&amp;quot;gaussian&amp;quot;,alpha=1)
+plot(trial2)&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&lt;img src=&#34;index_files/figure-html/unnamed-chunk-4-1.png&#34; width=&#34;672&#34; /&gt;&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;trial2$lambda.min&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## [1] 0.0006333202&lt;/code&gt;&lt;/pre&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;coef(trial2,s=trial2$lambda.min)&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## 12 x 1 sparse Matrix of class &amp;quot;dgCMatrix&amp;quot;
+##                           1
+## (Intercept)   11.1394417462
+## FEDFUNDS      -0.0722371601
+## CPIAUCSL      -0.0527957159
+## UNRATE        -0.1852844524
+## TB3MS          0.1832076909
+## INDPRO        -0.0594612598
+## T10YIEM        1.1753684002
+## TWEXBMTH      -0.0214997230
+## RECPROUSM156N -0.0093689975
+## BAA            0.7533742369
+## T5YIFRM       -0.4576523103
+## PCE            0.0006897586&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&lt;code&gt;Unemployment Rate&lt;/code&gt;、&lt;code&gt;3-Month Treasury Bill&lt;/code&gt;、&lt;code&gt;Breakeven Inflation Rate、Moody&#39;s Seasoned Baa Corporate Bond Yield&lt;/code&gt;、&lt;code&gt;Inflation Expectation Rate&lt;/code&gt;の回帰係数が大きくなるという結果ですね。失業率以外は想定内の結果です。ただ、今回の結果を見る限り景気との相関は低そうです（逆向きにしか効かない？）。MSEを計算します。&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;est.lasso.Y &amp;lt;- predict(trial2, newx = as.matrix(testdata[,-1]), s = trial2$lambda.min, type = &amp;#39;response&amp;#39;)
+mse.lasso &amp;lt;- sum((Y - est.lasso.Y)^2) / length(Y)
+mse.lasso&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## [1] 0.12775&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&lt;code&gt;lasso&lt;/code&gt;回帰のほうが良い結果になりました。&lt;code&gt;lasso&lt;/code&gt;回帰で計算した予測値と実績値を時系列プロットしてみます。&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;library(tidyverse)
+
+ggplot(gather(data.frame(actual=Y[,1],lasso_prediction=est.lasso.Y[,1],OLS_prediction=est.OLS.Y,date=as.POSIXct(rownames(Y))),key=data,value=rate,-date),aes(x=date,y=rate, colour=data)) +
+  geom_line(size=1.5) +
+  scale_x_datetime(breaks = &amp;quot;6 month&amp;quot;,date_labels = &amp;quot;%Y-%m&amp;quot;) +
+  scale_y_continuous(breaks=c(1,1.5,2,2.5,3,3.5),limits = c(1.25,3.5))&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&lt;img src=&#34;index_files/figure-html/unnamed-chunk-6-1.png&#34; width=&#34;672&#34; /&gt;&lt;/p&gt;
+&lt;p&gt;方向感はいい感じです。一方で、2016年1月からや2018年12月以降の急激な金利低下は予測できていません。この部分については何か変数を考えるorローリング推計を実施する、のいずれかをやってみないと精度が上がらなそうです。&lt;/p&gt;
+&lt;/div&gt;
+&lt;div id=&#34;日次解析パート&#34; class=&#34;section level2&#34;&gt;
+&lt;h2&gt;3. 日次解析パート&lt;/h2&gt;
+&lt;p&gt;月次での解析に加えて日次での解析もやりたいとおもいます。日次データであればデータの公表は市場が閉まり次第の場合が多いので、いわゆる&lt;code&gt;jagged edge&lt;/code&gt;の問題が起こりにくいと思います。まずは日次データの収集から始めます。&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;# data name collected
+symbols.name &amp;lt;- c(&amp;quot;10-Year Treasury Constant Maturity Rate&amp;quot;,&amp;quot;Effective Federal Funds Rate&amp;quot;,&amp;quot;
+6-Month London Interbank Offered Rate (LIBOR), based on U.S. Dollar&amp;quot;,&amp;quot;NASDAQ Composite Index&amp;quot;,&amp;quot;3-Month Treasury Bill: Secondary Market Rate&amp;quot;,&amp;quot;Economic Policy Uncertainty Index for United States&amp;quot;,&amp;quot;
+10-Year Breakeven Inflation Rate&amp;quot;,&amp;quot;Trade Weighted U.S. Dollar Index: Broad, Goods&amp;quot;,&amp;quot;Moody&amp;#39;s Seasoned Baa Corporate Bond Yield&amp;quot;,&amp;quot;5-Year, 5-Year Forward Inflation Expectation Rate&amp;quot;)
+
+# Collect economic data
+symbols &amp;lt;- c(&amp;quot;DGS10&amp;quot;,&amp;quot;DFF&amp;quot;,&amp;quot;USD6MTD156N&amp;quot;,&amp;quot;NASDAQCOM&amp;quot;,&amp;quot;DTB3&amp;quot;,&amp;quot;USEPUINDXD&amp;quot;,&amp;quot;T10YIE&amp;quot;,&amp;quot;DTWEXB&amp;quot;,&amp;quot;DBAA&amp;quot;,&amp;quot;T5YIFR&amp;quot;)
+getSymbols(symbols, from = &amp;#39;1980-01-01&amp;#39;, src = &amp;quot;FRED&amp;quot;, auto.assign = TRUE)&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;##  [1] &amp;quot;DGS10&amp;quot;       &amp;quot;DFF&amp;quot;         &amp;quot;USD6MTD156N&amp;quot; &amp;quot;NASDAQCOM&amp;quot;   &amp;quot;DTB3&amp;quot;       
+##  [6] &amp;quot;USEPUINDXD&amp;quot;  &amp;quot;T10YIE&amp;quot;      &amp;quot;DTWEXB&amp;quot;      &amp;quot;DBAA&amp;quot;        &amp;quot;T5YIFR&amp;quot;&lt;/code&gt;&lt;/pre&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;NASDAQCOM.r &amp;lt;- ROC(na.omit(NASDAQCOM))
+macro_indicator.d &amp;lt;- merge(DGS10,DFF,USD6MTD156N,NASDAQCOM.r,DTB3,USEPUINDXD,T10YIE,DTWEXB,DBAA,T5YIFR)
+rm(DGS10,DFF,USD6MTD156N,NASDAQCOM,NASDAQCOM.r,DTB3,USEPUINDXD,T10YIE,DTWEXB,DBAA,T5YIFR)&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;次にデータセットを構築します。学習用と訓練用にデータを分けます。実際の予測プロセスを考え、2営業日前のデータを説明変数に用いています。&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;# make dataset
+traindata.d &amp;lt;- na.omit(merge(macro_indicator.d[&amp;quot;1980-01-01::2010-12-31&amp;quot;][,1],stats::lag(macro_indicator.d[&amp;quot;1980-01-01::2010-12-31&amp;quot;][,-1],2)))
+testdata.d  &amp;lt;- na.omit(merge(macro_indicator.d[&amp;quot;2010-01-01::&amp;quot;][,1],stats::lag(macro_indicator.d[&amp;quot;2010-01-01::&amp;quot;][,-1],2)))
+
+# fitting OLS
+trial1.d &amp;lt;- lm(DGS10~.,data = traindata.d)
+summary(trial1.d)&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## 
+## Call:
+## lm(formula = DGS10 ~ ., data = traindata.d)
+## 
+## Residuals:
+##      Min       1Q   Median       3Q      Max 
+## -0.82445 -0.12285  0.00469  0.14332  0.73789 
+## 
+## Coefficients:
+##               Estimate Std. Error t value Pr(&amp;gt;|t|)    
+## (Intercept) -3.5051208  0.1690503 -20.734  &amp;lt; 2e-16 ***
+## DFF          0.0818269  0.0239371   3.418 0.000653 ***
+## USD6MTD156N -0.0135771  0.0233948  -0.580 0.561799    
+## NASDAQCOM   -0.3880217  0.4367334  -0.888 0.374483    
+## DTB3         0.1227984  0.0280283   4.381 1.29e-05 ***
+## USEPUINDXD  -0.0006611  0.0001086  -6.087 1.58e-09 ***
+## T10YIE       0.6980971  0.0355734  19.624  &amp;lt; 2e-16 ***
+## DTWEXB       0.0270128  0.0012781  21.135  &amp;lt; 2e-16 ***
+## DBAA         0.2988122  0.0182590  16.365  &amp;lt; 2e-16 ***
+## T5YIFR       0.3374944  0.0381111   8.856  &amp;lt; 2e-16 ***
+## ---
+## Signif. codes:  0 &amp;#39;***&amp;#39; 0.001 &amp;#39;**&amp;#39; 0.01 &amp;#39;*&amp;#39; 0.05 &amp;#39;.&amp;#39; 0.1 &amp;#39; &amp;#39; 1
+## 
+## Residual standard error: 0.2173 on 1114 degrees of freedom
+## Multiple R-squared:  0.8901, Adjusted R-squared:  0.8892 
+## F-statistic:  1002 on 9 and 1114 DF,  p-value: &amp;lt; 2.2e-16&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;依然決定係数は高めです。&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;est.OLS.Y.d &amp;lt;- predict(trial1.d,testdata.d[,-1])
+Y.d &amp;lt;- as.matrix(testdata.d[,1])
+mse.OLS.d &amp;lt;- sum((Y.d - est.OLS.Y.d)^2) / length(Y.d)
+mse.OLS.d&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## [1] 0.8003042&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;次に&lt;code&gt;lasso&lt;/code&gt;回帰です。&lt;code&gt;CV&lt;/code&gt;で&lt;span class=&#34;math inline&#34;&gt;\(\lambda\)&lt;/span&gt;を決定。&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;# fitting lasso regression
+trial2.d &amp;lt;- cv.glmnet(as.matrix(traindata.d[,-1]),as.matrix(traindata.d[,1]),family=&amp;quot;gaussian&amp;quot;,alpha=1)
+plot(trial2.d)&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&lt;img src=&#34;index_files/figure-html/unnamed-chunk-10-1.png&#34; width=&#34;672&#34; /&gt;&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;trial2.d$lambda.min&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## [1] 0.001472377&lt;/code&gt;&lt;/pre&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;coef(trial2.d,s=trial2.d$lambda.min)&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## 10 x 1 sparse Matrix of class &amp;quot;dgCMatrix&amp;quot;
+##                         1
+## (Intercept) -3.4186530904
+## DFF          0.0707022021
+## USD6MTD156N  .           
+## NASDAQCOM   -0.2675513858
+## DTB3         0.1204092358
+## USEPUINDXD  -0.0006506183
+## T10YIE       0.6915446819
+## DTWEXB       0.0270389569
+## DBAA         0.2861031504
+## T5YIFR       0.3376304446&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&lt;code&gt;libor&lt;/code&gt;の係数値が0になりました。MSEは&lt;code&gt;OLS&lt;/code&gt;の方が高い結果に。&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;est.lasso.Y.d &amp;lt;- predict(trial2.d, newx = as.matrix(testdata.d[,-1]), s = trial2.d$lambda.min, type = &amp;#39;response&amp;#39;)
+mse.lasso.d &amp;lt;- sum((Y.d - est.lasso.Y.d)^2) / length(Y.d)
+mse.lasso.d&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## [1] 0.8378427&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;予測値をプロットします。&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;ggplot(gather(data.frame(actual=Y.d[,1],lasso_prediction=est.lasso.Y.d[,1],OLS_prediction=est.OLS.Y.d,date=as.POSIXct(rownames(Y.d))),key=data,value=rate,-date),aes(x=date,y=rate, colour=data)) +
+  geom_line(size=1.5) +
+  scale_x_datetime(breaks = &amp;quot;2 year&amp;quot;,date_labels = &amp;quot;%Y-%m&amp;quot;) +
+  scale_y_continuous(breaks=c(1,1.5,2,2.5,3,3.5),limits = c(1.25,5))&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&lt;img src=&#34;index_files/figure-html/unnamed-chunk-12-1.png&#34; width=&#34;672&#34; /&gt;&lt;/p&gt;
+&lt;p&gt;月次と同じく、&lt;code&gt;OLS&lt;/code&gt;と&lt;code&gt;lasso&lt;/code&gt;で予測値に差はほとんどありません。なかなかいい感じに変動を捉えることができていますが、2011年の&lt;code&gt;United States federal government credit-rating downgrades&lt;/code&gt;による金利低下や2013年の景気回復に伴う金利上昇は捉えることができていません。日次の景気指標はPOSデータくらいしかないんですが、強いて言うなら最近使用した夜間光の衛星画像データなんかは使えるかもしれません。時間があればやってみます。とりあえず、いったんこれでこの記事は終わりたいと思います。ここまで読み進めていただき、ありがとうございました。&lt;/p&gt;
+&lt;/div&gt;
+</description>
+    </item>
+    
+    <item>
       <title>Google Earth Engine APIで衛星画像データを取得し、景況感をナウキャスティングしてみる</title>
       <link>/post/post12/</link>
       <pubDate>Tue, 16 Jul 2019 00:00:00 +0000</pubDate>
@@ -197,6 +719,225 @@ nightjp_csv.head()&lt;/code&gt;&lt;/pre&gt;
 &lt;p&gt;かなり季節性がありますね。冬場は日照時間が少ないこともあって光量が増えているみたいです。それにしても急激な増え方ですが。次回はこのデータと景況感の代理変数となる経済統計を元に統計解析を行いたいと思います。おたのしみに。&lt;/p&gt;
 &lt;/div&gt;
 &lt;/div&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>Google Earth Engine APIで衛星画像データを取得し、景況感をナウキャスティングしてみる（第２回）</title>
+      <link>/post/post13/</link>
+      <pubDate>Tue, 16 Jul 2019 00:00:00 +0000</pubDate>
+      <guid>/post/post13/</guid>
+      <description>
+&lt;p&gt;おはこんばんにちは。前回の記事でGoogl Earth Engineから衛星画像データを取得しました。ですが、ipygeeという素晴らしいツールがあり、より簡単に時系列データを取得できることがわかりました。今回はipygeeでデータを取得し、それを用いて景況感のナウキャスティングをやってみます。&lt;/p&gt;
+&lt;pre class=&#34;python&#34;&gt;&lt;code&gt;import pandas as pd
+import matplotlib.pyplot as plt
+import os
+import datetime
+import ipygee
+import ee
+from sklearn.preprocessing import MinMaxScaler
+
+ee.Initialize()
+
+os.environ[&amp;#39;QT_QPA_PLATFORM_PLUGIN_PATH&amp;#39;] = &amp;#39;C:/Users/aashi/Anaconda3/envs/earthengine/Library/plugins/platforms&amp;#39;
+
+plt.style.use(&amp;#39;ggplot&amp;#39;)
+plt.xkcd()&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## &amp;lt;matplotlib.rc_context object at 0x000000001EC99FD0&amp;gt;&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;まず、FeatureCollectionとImageCollectionメソッドを使用して、日本の地理データと夜間光の衛星画像データを取得します。&lt;/p&gt;
+&lt;pre class=&#34;python&#34;&gt;&lt;code&gt;
+start = datetime.datetime(2014,1,1)
+end = datetime.datetime(2019,1,1)
+
+japan = ee.FeatureCollection(&amp;#39;ft:1tdSwUL7MVpOauSgRzqVTOwdfy17KDbw-1d9omPw&amp;#39;).filter(ee.Filter.eq(&amp;#39;Country&amp;#39;, &amp;#39;Japan&amp;#39;))
+dataset = ee.ImageCollection(&amp;#39;NOAA/VIIRS/DNB/MONTHLY_V1/VCMSLCFG&amp;#39;).filter(ee.Filter.date(start,end)).select(&amp;#39;avg_rad&amp;#39;)&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;あとは、取得したImageCollectionを日本の地理データに形どり、夜間光を集計するipygee.chart.ImageのseriesByRegionメソッドを使用し、pandasデータフレームへ変換します。&lt;/p&gt;
+&lt;pre class=&#34;python&#34;&gt;&lt;code&gt;
+chart_ts_region = ipygee.chart.Image.seriesByRegion(**{
+    &amp;#39;imageCollection&amp;#39;: dataset,
+    &amp;#39;reducer&amp;#39;: ee.Reducer.sum(),
+    &amp;#39;regions&amp;#39;: japan,
+    &amp;#39;scale&amp;#39;: 1000
+})
+
+nightjp = chart_ts_region.dataframe
+nightjp.columns = [&amp;#39;nightlight&amp;#39;]
+nightjp.index = nightjp.index + pd.tseries.offsets.MonthEnd(1)
+nightjp.head()&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;##                nightlight
+## 2014-01-31  881528.746399
+## 2014-02-28  827364.583605
+## 2014-03-31  729127.359961
+## 2014-04-30  612680.682750
+## 2014-05-31  661449.531736&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;ここまでやってしまえば、あとはpandasデータフレームですからpythonでの解析が可能になります。そもそもeeのみでは、javascriptで使用できたui.chartメソッドを使用することができませんでした。よって、時系列データを取得するためにはee上でデータを作り、それをgoogle driveへexportし、pandas.read_csvで読み取るといったまどろっこしい作業をしなければなりませんでした。これなら関数1つで取得できますからかなり便利です。グラフにするとこんな感じです。前回取得したデータと同じようなデータが取得できています。&lt;/p&gt;
+&lt;pre class=&#34;python&#34;&gt;&lt;code&gt;
+nightjp.plot()
+plt.show()&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&lt;img src=&#34;./my_blog/post/post15_files/figure-html/unnamed-chunk-5-1.png&#34; width=&#34;672&#34; /&gt;&lt;/p&gt;
+&lt;p&gt;ここからは解析に移りたいのですが、御覧の通りかなり季節性があることがわかります。どうやら冬場に光量が大きくなる傾向になるようです（そもそも日が短いので）。なので、季節調整をかけてみます。RではX-13ARIMA-SEATSをいつも使用していますが、pythonでの使い方がわからないので、statsmodels.apiのseasonal_decomposeを使います。冬場とそれ以外で挙動が異なるのでfreqは12にしてみました。&lt;/p&gt;
+&lt;pre class=&#34;python&#34;&gt;&lt;code&gt;import statsmodels.api as sm
+nightjp_sm = sm.tsa.seasonal_decompose(nightjp[&amp;#39;nightlight&amp;#39;],freq=12,model=&amp;#39;multiplicative&amp;#39;)
+nightjp_sm.plot()
+plt.show()&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&lt;img src=&#34;./my_blog/post/post15_files/figure-html/unnamed-chunk-6-1.png&#34; width=&#34;672&#34; /&gt;&lt;/p&gt;
+&lt;p&gt;季節性を除いたTrendが2016年半ばくらいから2017年下旬にかけて急激に上昇しています。おそらく、景況感とはあまり相関がなさそうな動きをしていますが、以下の記事を参考にestatからAPIで鉱工業生産指数のデータを落とし、検証してみます。&lt;/p&gt;
+&lt;p&gt;&lt;a href=&#34;http://sinhrks.hatenablog.com/entry/2015/12/31/222207&#34; class=&#34;uri&#34;&gt;http://sinhrks.hatenablog.com/entry/2015/12/31/222207&lt;/a&gt;&lt;/p&gt;
+&lt;pre class=&#34;python&#34;&gt;&lt;code&gt;import numpy as np
+import japandas as jpd
+
+# import IIP from estat api
+dlist = jpd.DataReader(&amp;quot;00550300&amp;quot;, &amp;#39;estat&amp;#39;, appid=key)
+tables = dlist[(dlist[&amp;#39;統計表題名及び表番号&amp;#39;].str.contains(&amp;#39;総合季節調整済指数【月次】 付加価値額生産&amp;#39;)) &amp;amp; (dlist[&amp;#39;提供統計名及び提供分類名&amp;#39;].str.contains(&amp;#39;鉱工業生産・出荷・在庫指数&amp;#39;))]
+data = jpd.DataReader(tables.iloc[0,0], &amp;#39;estat&amp;#39;, appid=key)
+df = data[(data[&amp;#39;業種別&amp;#39;].str.contains(&amp;#39;1000000000 鉱工業&amp;#39;)) &amp;amp; ~(data[&amp;#39;統計項目A_2015_Match&amp;#39;].str.contains(&amp;#39;付加生産ウエイト&amp;#39;)) &amp;amp; ~(data[&amp;#39;統計項目A_2015_Match&amp;#39;].str.contains(&amp;#39;p&amp;#39;))]
+df.index = pd.to_datetime(df[&amp;quot;統計項目A_2015_Match&amp;quot;], format=&amp;quot;%Y%m&amp;quot;) + pd.tseries.offsets.MonthEnd(1)
+df.head()
+
+# merge with seasonally adjusted nightlight data&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;##                   value             業種別 統計項目A_2015_Match
+## 統計項目A_2015_Match                                        
+## 2013-01-31         94.8  1000000000 鉱工業           201301
+## 2013-02-28         96.5  1000000000 鉱工業           201302
+## 2013-03-31         97.7  1000000000 鉱工業           201303
+## 2013-04-30         97.7  1000000000 鉱工業           201304
+## 2013-05-31         99.3  1000000000 鉱工業           201305&lt;/code&gt;&lt;/pre&gt;
+&lt;pre class=&#34;python&#34;&gt;&lt;code&gt;df2 = pd.merge(nightjp_sm.trend.to_frame(),df,how=&amp;#39;left&amp;#39;,left_index=True,right_index=True)[[&amp;#39;nightlight&amp;#39;,&amp;#39;value&amp;#39;]]
+df2.head()
+
+# MinMaxScaling&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;##             nightlight  value
+## 2014-01-31         NaN  103.8
+## 2014-02-28         NaN  102.7
+## 2014-03-31         NaN  104.2
+## 2014-04-30         NaN   99.6
+## 2014-05-31         NaN  101.9&lt;/code&gt;&lt;/pre&gt;
+&lt;pre class=&#34;python&#34;&gt;&lt;code&gt;scaler = MinMaxScaler()
+df2.loc[:,[&amp;#39;nightlight&amp;#39;,&amp;#39;value&amp;#39;]] = scaler.fit(df2).transform(df2)
+
+df2.plot()
+plt.show()&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&lt;img src=&#34;./my_blog/post/post15_files/figure-html/unnamed-chunk-8-1.png&#34; width=&#34;672&#34; /&gt;&lt;/p&gt;
+&lt;p&gt;予想に反し、かなり良い傾向を掴めていますね。季節調整を少し雑にやっているので、必要な情報もノイズとしてスクリーニングされた感がありますが、季節調整を真面目にやればかなり近い数値が出てくる気もします。ということで、X-13ARIMA-SEATSのpythonでの使い方をググりました。なんとstatsmodelsで動かせるようです。&lt;/p&gt;
+&lt;pre class=&#34;python&#34;&gt;&lt;code&gt;
+import statsmodels as sms
+
+# x13 
+os.environ[&amp;#39;X13PATH&amp;#39;] = r&amp;quot;C:\Program Files\WinX13\x13as&amp;quot;
+x13results = sms.tsa.x13.x13_arima_analysis(endog = nightjp[&amp;#39;nightlight&amp;#39;],prefer_x13=True)
+x13results.plot()
+
+# merge with seasonally adjusted nightlight data
+df3 = pd.merge(x13results.seasadj.to_frame(),df,left_index=True,right_index=True)[[&amp;#39;seasadj&amp;#39;,&amp;#39;value&amp;#39;]]
+
+# MinMaxScaling
+scaler = MinMaxScaler()
+df3.loc[:,[&amp;#39;seasadj&amp;#39;,&amp;#39;value&amp;#39;]] = scaler.fit(df3).transform(df3)
+
+df3.plot()&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&lt;img src=&#34;./my_blog/post/post15_files/figure-html/unnamed-chunk-9-1.png&#34; width=&#34;672&#34; /&gt;&lt;/p&gt;
+&lt;p&gt;そこそこ説明力高め。これは個人的には大発見です。鉱工業生産指数はGDPとの相関が高く、月次統計でもあります。ただ、生産動向統計から作成されると言うこともあり、データが公表されるタイミングは速報値が出るのが翌月末です。一方、衛星データであれば月初から推計値を計算することが可能です。まさにナウキャスティングですね。欲を言えば、日次でデータが取れれば最高なんですけどね。多分それは有料ならできるんでしょう。。。今はこれで我慢です。（いつか使える日が来るのか？）&lt;/p&gt;
+&lt;p&gt;単回帰もやってみます。&lt;/p&gt;
+&lt;pre class=&#34;python&#34;&gt;&lt;code&gt;
+from sklearn import linear_model
+clf = linear_model.LinearRegression(normalize=False)
+
+X = df3.dropna().loc[:, [&amp;#39;seasadj&amp;#39;]].as_matrix()&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## C:/Users/aashi/Anaconda3/envs/earthengine/python.exe:1: FutureWarning: Method .as_matrix will be removed in a future version. Use .values instead.&lt;/code&gt;&lt;/pre&gt;
+&lt;pre class=&#34;python&#34;&gt;&lt;code&gt;Y = df3.dropna()[&amp;#39;value&amp;#39;].as_matrix()
+
+clf.fit(X, Y)&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## LinearRegression(copy_X=True, fit_intercept=True, n_jobs=None,
+##          normalize=False)&lt;/code&gt;&lt;/pre&gt;
+&lt;pre class=&#34;python&#34;&gt;&lt;code&gt;print(clf.coef_,clf.intercept_,clf.score(X, Y))&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## [0.94721098] 0.01956484094473454 0.5228197194050053&lt;/code&gt;&lt;/pre&gt;
+&lt;pre class=&#34;python&#34;&gt;&lt;code&gt;plt.scatter(X, Y)
+ 
+plt.plot(X, clf.predict(X))&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&lt;img src=&#34;./my_blog/post/post15_files/figure-html/unnamed-chunk-10-1.png&#34; width=&#34;672&#34; /&gt;&lt;/p&gt;
+&lt;p&gt;ほぼほぼ比例の関係にありますね。決定係数は0.5でした。散布図を見ると非線形の関係にあるようにも見えるのでガウス回帰でそれも試してみます。&lt;/p&gt;
+&lt;pre class=&#34;python&#34;&gt;&lt;code&gt;
+from sklearn.gaussian_process.kernels import RBF,WhiteKernel
+from sklearn.gaussian_process import GaussianProcessRegressor as GPR
+
+# kernel is RBF + white
+kernel = 1*RBF()+WhiteKernel()
+
+# estimate gp
+gp = GPR(kernel,alpha=0)
+gp.fit(X,Y)
+
+# plot&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## GaussianProcessRegressor(alpha=0, copy_X_train=True,
+##              kernel=1**2 * RBF(length_scale=1) + WhiteKernel(noise_level=1),
+##              n_restarts_optimizer=0, normalize_y=False,
+##              optimizer=&amp;#39;fmin_l_bfgs_b&amp;#39;, random_state=None)&lt;/code&gt;&lt;/pre&gt;
+&lt;pre class=&#34;python&#34;&gt;&lt;code&gt;X1 = np.linspace(0,1,25000)
+plt.plot(X,Y,&amp;#39;. &amp;#39;)
+mu,std = gp.predict(X1.reshape(-1, 1),return_std=True)
+plt.plot(X1,mu,&amp;#39;g&amp;#39;)
+plt.fill_between(X1,mu-std,mu+std,alpha=0.2,color=&amp;#39;g&amp;#39;)
+plt.show()&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&lt;img src=&#34;./my_blog/post/post15_files/figure-html/unnamed-chunk-11-1.png&#34; width=&#34;672&#34; /&gt;&lt;/p&gt;
+&lt;p&gt;0.6まではほぼ直線ですが、その先で外れ値に引っ張られています。本当は0.7~0.8のところで二次関数のようにぐっと上昇して欲しいのですが。外れ値に引っ張られないよう、正規分布でなくt分布を仮定したt過程回帰で推計します。&lt;/p&gt;
+&lt;p&gt;実際の推計をする前に、理論的な話をしておきます。そもそもt分布とは正規分布の分散を増減させるパラメータを新たに与え、それがガンマ分布に従うと仮定した分布です。t過程はガウス過程と同様、有限集合&lt;span class=&#34;math inline&#34;&gt;\(\textbf{X}\)&lt;/span&gt;が入力として与えられた際に、関数値ベクトル&lt;span class=&#34;math inline&#34;&gt;\(\textbf{f}_{TP}\)&lt;/span&gt;の分布がその多変量t分布に従うような確率分布を言います。t過程は自由度&lt;span class=&#34;math inline&#34;&gt;\(v\)&lt;/span&gt;、平均関数&lt;span class=&#34;math inline&#34;&gt;\(\mu\)&lt;/span&gt;、共分散関数を要素に持つ共分散行列&lt;span class=&#34;math inline&#34;&gt;\(\textbf{K}\)&lt;/span&gt;をパラメータとしています。これを&lt;span class=&#34;math inline&#34;&gt;\(\textbf{f}_{TP}\)&lt;/span&gt;~&lt;span class=&#34;math inline&#34;&gt;\(T(v,\mu(\textbf{x}),\textbf{K}(\textbf{x},\textbf{x}&amp;#39;))\)&lt;/span&gt;と表します。&lt;span class=&#34;math inline&#34;&gt;\(T(v,\mu(\textbf{x}),\textbf{K}(\textbf{x},\textbf{x}&amp;#39;))\)&lt;/span&gt;は先述の通り多変量t分布です。出力である確率変数&lt;span class=&#34;math inline&#34;&gt;\(\textbf{y}\)&lt;/span&gt;に対して、確率密度関数は以下のように与えられます（つまり多変量t分布の密度関数）。&lt;/p&gt;
+&lt;p&gt;&lt;span class=&#34;math display&#34;&gt;\[
+T(v,\mu,\textbf{K}) = \frac{\Gamma(\frac{v+n}{2})}{((v-2)\pi)^{n/2}\Gamma(\frac{v}{2})}\frac{1}{\sqrt(\det\textbf{K})}(1+\frac{(\textbf{y}-\mu)^T\textbf{K}^{-1}(\textbf{y}-\mu)}{v-2})^{-\frac{(v+n)}2}
+\]&lt;/span&gt;&lt;/p&gt;
+&lt;p&gt;ここで、&lt;span class=&#34;math inline&#34;&gt;\(\Gamma\)&lt;/span&gt;はΓ関数です。ここで、&lt;span class=&#34;math inline&#34;&gt;\(v\to\infty\)&lt;/span&gt;とするとカーネルの部分が、&lt;/p&gt;
+&lt;p&gt;&lt;span class=&#34;math display&#34;&gt;\[
+\lim_{v\to\infty}(1+\frac{(\textbf{y}-\mu)^T\textbf{K}^{-1}(\textbf{y}-\mu)}{v-2})^{-\frac{(v+n)}2}=\exp(\frac{(\textbf{y}-\mu)^T\textbf{K}^{-1}(\textbf{y}-\mu)}{2})
+\]&lt;/span&gt;&lt;/p&gt;
+&lt;p&gt;と正規分布に収束するので、先述の通りt分布は正規分布の一般系であることがわかります。次に、今定義したt過程を使った回帰問題について考えます。学習データ&lt;span class=&#34;math inline&#34;&gt;\((\textbf{x}_i,y_{i})\)&lt;/span&gt;が手元にあるとします。t過程回帰では以下のようなモデルを考えます。&lt;/p&gt;
+&lt;p&gt;&lt;span class=&#34;math display&#34;&gt;\[
+y_{i} = f_{TP}(\textbf{x}_{i}) + \epsilon_{i}
+\]&lt;/span&gt;
+ここで、&lt;span class=&#34;math inline&#34;&gt;\(f_{TP}(\textbf{x}_{i})\)&lt;/span&gt;は基底関数による入力ベクトルの特徴量、&lt;span class=&#34;math inline&#34;&gt;\(\epsilon_{i}-T(v,0,\sigma^2)\)&lt;/span&gt;は観測ノイズを表しています。また、&lt;span class=&#34;math inline&#34;&gt;\(\textbf{f}_{TP}=[f_{TP}(\textbf{x}_{1}),...,f_{TP}(\textbf{x}_{n})]^T\)&lt;/span&gt;と定義し、t過程に従うとします。&lt;span class=&#34;math inline&#34;&gt;\(\textbf{f}_{TP}\)&lt;/span&gt;と&lt;span class=&#34;math inline&#34;&gt;\(\epsilon_{i}\)&lt;/span&gt;の分布がわかっていますから、&lt;span class=&#34;math inline&#34;&gt;\(\textbf{x}\)&lt;/span&gt;が既知となった後の&lt;span class=&#34;math inline&#34;&gt;\(\textbf{y}\)&lt;/span&gt;の分布を計算することができます。これはガウス過程の時と同じで、2つの独立なt分布のたたみ込みになるので、&lt;span class=&#34;math inline&#34;&gt;\(\textbf{y}-T(v,\mu(\textbf{x}),\textbf{K}(\textbf{x},\textbf{x}&amp;#39;)+\sigma\textbf{I})\)&lt;/span&gt;となります。この分布を推定するには&lt;span class=&#34;math inline&#34;&gt;\(\mu,\textbf{K},\sigma\)&lt;/span&gt;を推定する必要があります。まあ、だいたい&lt;span class=&#34;math inline&#34;&gt;\(\mu=0,\sigma=1/100\)&lt;/span&gt;みたいに決め打ちしてしまうことが多い気がします。重要なのは&lt;span class=&#34;math inline&#34;&gt;\(\textbf{K}\)&lt;/span&gt;です。これもガウス過程と同じでカーネル関数を用いることで計算の効率化を図ります。どのカーネル関数を用いるかで推定すべきパラメータの数は変わってきますからここでは大まかな推定方法について説明したいと思います。&lt;/p&gt;
+&lt;p&gt;パラメータの推定方法は最尤法です。カーネル関数を&lt;span class=&#34;math inline&#34;&gt;\(K(\textbf{x},\textbf{x}&amp;#39;,\beta)\)&lt;/span&gt;と定義し、&lt;span class=&#34;math inline&#34;&gt;\(\beta\)&lt;/span&gt;をパラメータとします。尤度関数は以下で与えられます。&lt;/p&gt;
+&lt;p&gt;&lt;span class=&#34;math display&#34;&gt;\[
+L(v,\mu,\textbf{K}(\textbf{x},\textbf{x}&amp;#39;,\beta),\textbf{y}) = \frac{\Gamma(\frac{v+n}{2})}{((v-2)\pi)^{n/2}\Gamma(\frac{v}{2})}\frac{1}{\sqrt(\det\textbf{K}(\textbf{x},\textbf{x}&amp;#39;,\beta))}(1+\frac{(\textbf{y}-\mu)^T\textbf{K}(\textbf{x},\textbf{x}&amp;#39;,\beta)^{-1}(\textbf{y}-\mu)}{v-2})^{-\frac{(v+n)}2}
+\]&lt;/span&gt;&lt;/p&gt;
+&lt;p&gt;これを最大化するような&lt;span class=&#34;math inline&#34;&gt;\(\beta\)&lt;/span&gt;をPCのパワーを使って探索的に求め、最尤推定値とするのです。ここらへんもガウス過程と同じです。これで回帰推定は完了です。とりあえずここまでをpythonで実行しましょう。&lt;/p&gt;
+&lt;pre class=&#34;python&#34;&gt;&lt;code&gt;
+import GPy
+
+kernel = GPy.kern.MLP(1, ARD=True)
+tpmodel = GPy.models.TPRegression(X.reshape(-1,1),Y.reshape(-1,1),kernel=kernel,normalizer=True)
+
+tpmodel.optimize()&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## &amp;lt;paramz.optimization.optimization.opt_lbfgsb object at 0x00000000354B4E10&amp;gt;&lt;/code&gt;&lt;/pre&gt;
+&lt;pre class=&#34;python&#34;&gt;&lt;code&gt;tpmodel.plot()&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## {&amp;#39;dataplot&amp;#39;: [&amp;lt;matplotlib.collections.PathCollection object at 0x00000000386A96A0&amp;gt;], &amp;#39;gpconfidence&amp;#39;: [&amp;lt;matplotlib.collections.PolyCollection object at 0x00000000386A9B38&amp;gt;], &amp;#39;gpmean&amp;#39;: [[&amp;lt;matplotlib.lines.Line2D object at 0x00000000386A94E0&amp;gt;]]}&lt;/code&gt;&lt;/pre&gt;
+&lt;pre class=&#34;python&#34;&gt;&lt;code&gt;plt.show()&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&lt;img src=&#34;./my_blog/post/post15_files/figure-html/unnamed-chunk-12-1.png&#34; width=&#34;672&#34; /&gt;&lt;/p&gt;
+&lt;p&gt;あまり、GPと変化ありませんね。ハイパーパラメータを点推定していますが、MCMCを用いてサンプリングする方法も試してみましょう。&lt;/p&gt;
+&lt;pre class=&#34;python&#34;&gt;&lt;code&gt;
+tpmodel.randomize()
+hmc = GPy.inference.mcmc.HMC(tpmodel)
+sample = hmc.sample(num_samples=10000,hmc_iters=200)&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;##  C:\Users\aashi\Anaconda3\envs\earthengine\lib\site-packages\paramz\transformations.py:111: RuntimeWarning:overflow encountered in expm1&lt;/code&gt;&lt;/pre&gt;
+&lt;pre class=&#34;python&#34;&gt;&lt;code&gt;import seaborn as sns
+param_name = tpmodel.parameter_names()
+
+fig, ax = plt.subplots(figsize=(10,4))
+ax.set_yscale(&amp;#39;log&amp;#39;)
+sns.boxenplot(data=sample, ax=ax)
+ax.set_xticklabels(param_name)&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## [Text(0, 0, &amp;#39;mlp.variance&amp;#39;), Text(0, 0, &amp;#39;mlp.weight_variance&amp;#39;), Text(0, 0, &amp;#39;mlp.bias_variance&amp;#39;), Text(0, 0, &amp;#39;deg_free&amp;#39;)]&lt;/code&gt;&lt;/pre&gt;
+&lt;pre class=&#34;python&#34;&gt;&lt;code&gt;fig.tight_layout()
+plt.show()&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&lt;img src=&#34;./my_blog/post/post15_files/figure-html/unnamed-chunk-13-1.png&#34; width=&#34;960&#34; /&gt;&lt;/p&gt;
+&lt;pre class=&#34;python&#34;&gt;&lt;code&gt;for ii in range(len(param_name)):
+    tpmodel[param_name[ii]] = np.mean(sample, axis=0)[ii]
+    tpmodel.plot()
+    plt.tight_layout()&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## {&amp;#39;dataplot&amp;#39;: [&amp;lt;matplotlib.collections.PathCollection object at 0x0000000005077710&amp;gt;], &amp;#39;gpconfidence&amp;#39;: [&amp;lt;matplotlib.collections.PolyCollection object at 0x0000000005077B70&amp;gt;], &amp;#39;gpmean&amp;#39;: [[&amp;lt;matplotlib.lines.Line2D object at 0x00000000050775F8&amp;gt;]]}
+## {&amp;#39;dataplot&amp;#39;: [&amp;lt;matplotlib.collections.PathCollection object at 0x000000000521EFD0&amp;gt;], &amp;#39;gpconfidence&amp;#39;: [&amp;lt;matplotlib.collections.PolyCollection object at 0x0000000005224470&amp;gt;], &amp;#39;gpmean&amp;#39;: [[&amp;lt;matplotlib.lines.Line2D object at 0x000000000521EEB8&amp;gt;]]}
+## {&amp;#39;dataplot&amp;#39;: [&amp;lt;matplotlib.collections.PathCollection object at 0x0000000004619550&amp;gt;], &amp;#39;gpconfidence&amp;#39;: [&amp;lt;matplotlib.collections.PolyCollection object at 0x0000000004619BA8&amp;gt;], &amp;#39;gpmean&amp;#39;: [[&amp;lt;matplotlib.lines.Line2D object at 0x0000000004874470&amp;gt;]]}
+## {&amp;#39;dataplot&amp;#39;: [&amp;lt;matplotlib.collections.PathCollection object at 0x00000000045F9080&amp;gt;], &amp;#39;gpconfidence&amp;#39;: [&amp;lt;matplotlib.collections.PolyCollection object at 0x00000000045F9470&amp;gt;], &amp;#39;gpmean&amp;#39;: [[&amp;lt;matplotlib.lines.Line2D object at 0x00000000047F1D30&amp;gt;]]}&lt;/code&gt;&lt;/pre&gt;
+&lt;pre class=&#34;python&#34;&gt;&lt;code&gt;plt.show()&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&lt;img src=&#34;./my_blog/post/post15_files/figure-html/unnamed-chunk-13-2.png&#34; width=&#34;672&#34; /&gt;&lt;/p&gt;
+&lt;p&gt;うーん、0－1以外の区間の信頼性はないかも。Student t processは過学習気味になることがわかりました。&lt;/p&gt;
 </description>
     </item>
     
