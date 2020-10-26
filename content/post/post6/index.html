@@ -2,8 +2,8 @@
 title: "Gianonne et. al. (2008)のマルチファクターモデルで四半期GDPを予想してみた"
 author: admin
 date: 2018-07-16T00:00:00Z
-categories: ["R","マクロ経済学"]
-tags: ["カルマンフィルタ"]
+categories: ["マクロ経済学"]
+tags: ["R","カルマンフィルタ"]
 draft: false
 featured: false
 image:
@@ -12,15 +12,26 @@ image:
   placement: 2
   preview_only: false
 lastmod: ""
+slug: ["Gianonne"]
 projects: []
 summary: 前回集めた経済データをGiannone et al (2008)のマルチファクターモデルで推定し、四半期GDPを予測したいと思います。
 output: 
-  html_document:
+  blogdown::html_page:
+    number_sections: false
     toc: true
+    df_print: "paged"
 ---
 
 <script src="index_files/header-attrs/header-attrs.js"></script>
+<link href="index_files/pagedtable/css/pagedtable.css" rel="stylesheet" />
+<script src="index_files/pagedtable/js/pagedtable.js"></script>
 
+<div id="TOC">
+<ul>
+<li><a href="#gianonne-et.-al.-2008版マルチファクターモデル">1. Gianonne et. al. (2008)版マルチファクターモデル</a></li>
+<li><a href="#rで実装する">2. Rで実装する</a></li>
+</ul>
+</div>
 
 <p>おはこんばんにちは。
 前回、統計ダッシュボードからAPI接続で統計データを落とすという記事を投稿しました。

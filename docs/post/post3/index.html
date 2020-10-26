@@ -617,9 +617,10 @@
 
 
 
+  
   <article class="article">
 
-  
+    
 
 
 
@@ -684,7 +685,7 @@
   
   <span class="middot-divider"></span>
   <span class="article-categories">
-    <i class="fas fa-folder mr-1"></i><a href="../../category/r/">R</a>, <a href="../../category/%E3%83%9E%E3%82%AF%E3%83%AD%E7%B5%8C%E6%B8%88%E5%AD%A6/">マクロ経済学</a></span>
+    <i class="fas fa-folder mr-1"></i><a href="../../category/%E3%83%9E%E3%82%AF%E3%83%AD%E7%B5%8C%E6%B8%88%E5%AD%A6/">マクロ経済学</a></span>
   
 
 </div>
@@ -716,12 +717,22 @@
 
 
 
-  <div class="article-container">
+    <div class="article-container">
 
-    <div class="article-style">
-      
+      <div class="article-style">
+        
 <script src="index_files/header-attrs/header-attrs.js"></script>
+<link href="index_files/pagedtable/css/pagedtable.css" rel="stylesheet" />
+<script src="index_files/pagedtable/js/pagedtable.js"></script>
 
+<div id="TOC">
+<ul>
+<li><a href="#カルマンフィルタとは">1. カルマンフィルタとは？</a></li>
+<li><a href="#カルマンフィルタアルゴリズムの導出">2. カルマンフィルタアルゴリズムの導出</a></li>
+<li><a href="#rで実装する">3. <code>R</code>で実装する。</a></li>
+<li><a href="#カルマンスムージング">4. カルマンスムージング</a></li>
+</ul>
+</div>
 
 <p>おはこんばんにちは。かなり久しぶりの投稿となってしまいました。決して研究をさぼっていたのではなく、<code>BVAR</code>のコーディングに手こずっていました。あと少しで完成します。さて、今回は<code>BVAR</code>やこの前のGiannnone et a (2008)のような分析でも大活躍のカルマンフィルタを実装してしまいたいと思います。このブログではパッケージソフトに頼らず、基本的に自分で一から実装を行い、研究することをポリシーとしていますので、これから頻繁に使用するであろうカルマンフィルタを関数として実装してしまうことは非常に有益であると考えます。今回はRで実装をしましたので、そのご報告をします。</p>
 <div id="カルマンフィルタとは" class="section level2">
@@ -1179,9 +1190,9 @@ a_{t|T} &amp;=&amp; a_{t|t} + L_{t}(a_{t+1|T} - a_{t+1|t}) \\
 <p>かなりシンプルですね。ちなみにグラフにしましたが、１個目とほぼ変わりませんでした。とりあえず、今日はここまで。</p>
 </div>
 
-    </div>
+      </div>
 
-    
+      
 
 
 
@@ -1191,6 +1202,8 @@ a_{t|T} &amp;=&amp; a_{t|t} + L_{t}(a_{t+1|T} - a_{t+1|t}) \\
 <div class="article-tags">
   
   <a class="badge badge-light" href="../../tag/%E3%82%AB%E3%83%AB%E3%83%9E%E3%83%B3%E3%83%95%E3%82%A3%E3%83%AB%E3%82%BF/">カルマンフィルタ</a>
+  
+  <a class="badge badge-light" href="../../tag/r/">R</a>
   
 </div>
 
@@ -1424,8 +1437,9 @@ a_{t|T} &amp;=&amp; a_{t|t} + L_{t}(a_{t+1|T} - a_{t+1|t}) \\
 
 
 
-  </div>
-</article>
+    </div>
+  </article>
+
 
       
 

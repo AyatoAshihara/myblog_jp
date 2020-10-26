@@ -2,10 +2,11 @@
 title: "GPLVMでマルチファクターモデルを構築してみた"
 author: admin
 date: 2019-05-26T00:00:00Z
-categories: ["R","マクロ経済学"]
-tags: ["ガウス過程","GPLVM"]
+categories: ["マクロ経済学"]
+tags: ["R","ガウス過程","GPLVM"]
 draft: false
 featured: false
+slug: ["GPLVM"]
 image:
   caption: ''
   focal_point: ""
@@ -15,9 +16,10 @@ lastmod: ""
 projects: []
 summary: 最近私が注目しているのがガウス過程。今回はそのガウス過程の中でも、主成分分析のようにデータセットの次元削減のために使用されるGaussian Process Latent Variable Model（GPLVM）の紹介をします。
 output: 
-  html_document: 
-    toc: yes
-    keep_md: yes
+  blogdown::html_page:
+    number_sections: false
+    toc: true
+    df_print: "paged"
 ---
 
 ```{r setup, include=FALSE}

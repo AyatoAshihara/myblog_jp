@@ -6,6 +6,7 @@ categories: ["統計学"]
 tags: ["BVAR"]
 draft: false
 featured: false
+slug: ["BVAR"]
 image:
   caption: ''
   focal_point: ""
@@ -15,12 +16,28 @@ lastmod: 2019-04-29T00:00:00Z
 projects: []
 summary: Bayesian VAR（BVAR）と呼ばれる、VARの仲でも予測精度の向上を目材して開発されたモデルを勉強してみました。
 output: 
-  html_document:
+  blogdown::html_page:
+    number_sections: false
     toc: true
+    df_print: "paged"
 ---
 
 <script src="index_files/header-attrs/header-attrs.js"></script>
+<link href="index_files/pagedtable/css/pagedtable.css" rel="stylesheet" />
+<script src="index_files/pagedtable/js/pagedtable.js"></script>
 
+<div id="TOC">
+<ul>
+<li><a href="#unrestricted-varについて">1. Unrestricted VARについて</a></li>
+<li><a href="#bvarについて">2. BVARについて</a>
+<ul>
+<li><a href="#具体的な推定方法カルマンフィルタ">具体的な推定方法（カルマンフィルタ）</a></li>
+<li><a href="#カルマンフィルタの初期値をどのようにきめるか">カルマンフィルタの初期値をどのようにきめるか</a></li>
+<li><a href="#ハイパーパラメータの決定方法とその評価尺度">ハイパーパラメータの決定方法とその評価尺度</a></li>
+</ul></li>
+<li><a href="#rでの実装">3. Rでの実装</a></li>
+</ul>
+</div>
 
 <p>　おはこんばんにちは。日次GDP推計を休日に進めているのですが、今日は少し勉強編で<code>BVAR</code>についての記事を書きたいと思います。この<code>BVAR</code>はFRBアトランタ連銀の<code>GDPNow</code>でも使用されていることから、日次GDP推計との親和性も高いと思われます。そもそも、時系列でアウトサンプルの予測精度を上げたいということになると真っ先に思いつくのが<code>BVAR</code>です。Doan, Litterman and Sims(1984)で提案されたこのモデルは予測精度が良いので、非常に有効な手段になると思われます。<code>BVAR</code>は<code>Bayesian Vector Autoregression</code>の略で、ベクトル自己回帰モデル（<code>VAR</code>）の派生版です。<code>VAR</code>とネットで調べるとまず<code>Value at Risk</code>（<code>VaR</code>）が出てくると思いますが、それとは違います。よく見るとaが小文字になっていることに気づくかと思います。
 　さて、<code>BVAR</code>の説明をこれから行おうとするのですが、その前にまず基本的な<code>VAR</code>の説明からしたいと思います。ただし、歴史的な背景（大型マクロ計量モデルからの経緯など）には触れません。あくまで、<code>BVAR</code>を説明するうえで必要な知識について触れたいと思います。</p>

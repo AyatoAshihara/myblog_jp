@@ -4,6 +4,7 @@ author: admin
 date: 2018-05-19T00:00:00Z
 categories: ["競馬","Webスクレイピング"]
 tags: ["前処理","R"]
+slug: ["rvest"]
 draft: false
 featured: false
 image:
@@ -15,8 +16,10 @@ lastmod: 2018-06-10T00:00:00Z
 projects: []
 summary: 今、競馬×データサイエンスが熱いです。ウマナリティクスなるものがあり、これまでのレース結果からなんらかのモデルを作成し、順位予想や回収率を高める馬券購入方法を考えようとする人が一定数いるようです。今回は競馬をデータ解析するためのデータを取得します。rvestを用いて、ごりごりにクローリングを行いました。
 output: 
-  html_document:
+  blogdown::html_page:
+    number_sections: false
     toc: true
+    df_print: "paged"
 ---
 
 ```{r setup, include=FALSE}

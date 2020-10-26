@@ -2,8 +2,8 @@
 title: "Asset Allocation ModelをRで組んでみた。"
 author: admin
 date: 2019-02-17T00:00:00Z
-categories: ["R","仕事関連"]
-tags: []
+categories: ["仕事関連"]
+tags: ["R"]
 draft : false
 featured: false
 image:
@@ -14,12 +14,30 @@ image:
 lastmod: 2019-03-03T00:00:00Z
 projects: []
 summary: 社内ワークショップがあり、休日は国会図書館に籠り、先行研究を漁った結果、微妙なアセットアロケーションモデルを構築できました。
+output: 
+  blogdown::html_page:
+    number_sections: false
+    toc: true
+    df_print: "paged"
 ---
 
 <script src="index_files/header-attrs/header-attrs.js"></script>
+<link href="index_files/pagedtable/css/pagedtable.css" rel="stylesheet" />
+<script src="index_files/pagedtable/js/pagedtable.js"></script>
 
+<div id="TOC">
+<ul>
+<li><a href="#最小分散ポートフォリオ">1. 最小分散ポートフォリオ</a></li>
+<li><a href="#分散共分散行列をどのように求めるか">2. 分散共分散行列をどのように求めるか</a>
+<ul>
+<li><a href="#a.-constant-conditional-correlation-ccc-model">A. Constant conditional correlation (CCC) model</a></li>
+<li><a href="#b.-dynamic-conditional-correlation-dcc-model">B. Dynamic Conditional Correlation (DCC) model</a></li>
+<li><a href="#c.-dynamic-equicorrelation-deco-model">C. Dynamic Equicorrelation (DECO) model</a></li>
+</ul></li>
+<li><a href="#テスト用データの収集">3. テスト用データの収集</a></li>
+</ul>
+</div>
 
-<p>{{% toc %}}</p>
 <p>おはこんばんにちは。勤め先で、アセットアロケーションに関するワークショップに参加したので、この分野は完全なる専門外ですがシミュレーションをしてみたいと思います。今回は、最小分散ポートフォリオ(minimum variance portfolio)を基本ポートフォリオとしたうえで、その分散共分散行列（予測値）をどのように推計するのかという点について先行研究を参考にエクササイズしていきたいと思います。先行研究は以下の論文です（オペレーションリサーチのジャーナルでした）。</p>
 <p><a href="https://papers.ssrn.com/sol3/papers.cfm?abstract_id=2947643">Asset Allocation with Correlation: A Composite Trade-Off</a></p>
 <div id="最小分散ポートフォリオ" class="section level2">

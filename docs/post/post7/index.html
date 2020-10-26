@@ -617,9 +617,10 @@
 
 
 
+  
   <article class="article">
 
-  
+    
 
 
 
@@ -684,7 +685,7 @@
   
   <span class="middot-divider"></span>
   <span class="article-categories">
-    <i class="fas fa-folder mr-1"></i><a href="../../category/r/">R</a>, <a href="../../category/%E3%83%9E%E3%82%AF%E3%83%AD%E7%B5%8C%E6%B8%88%E5%AD%A6/">マクロ経済学</a>, <a href="../../category/web%E3%82%B9%E3%82%AF%E3%83%AC%E3%82%A4%E3%83%92%E3%83%B3%E3%82%AF/">Webスクレイピング</a></span>
+    <i class="fas fa-folder mr-1"></i><a href="../../category/%E3%83%9E%E3%82%AF%E3%83%AD%E7%B5%8C%E6%B8%88%E5%AD%A6/">マクロ経済学</a>, <a href="../../category/web%E3%82%B9%E3%82%AF%E3%83%AC%E3%82%A4%E3%83%92%E3%83%B3%E3%82%AF/">Webスクレイピング</a></span>
   
 
 </div>
@@ -716,12 +717,21 @@
 
 
 
-  <div class="article-container">
+    <div class="article-container">
 
-    <div class="article-style">
-      
+      <div class="article-style">
+        
 <script src="index_files/header-attrs/header-attrs.js"></script>
+<link href="index_files/pagedtable/css/pagedtable.css" rel="stylesheet" />
+<script src="index_files/pagedtable/js/pagedtable.js"></script>
 
+<div id="TOC">
+<ul>
+<li><a href="#先行研究と具体的にやりたいこと">1. 先行研究と具体的にやりたいこと</a></li>
+<li><a href="#統計ダッシュボードからのデータの収集">2. 統計ダッシュボードからのデータの収集</a></li>
+<li><a href="#得られたデータを主成分分析にかけてみる">3. 得られたデータを主成分分析にかけてみる</a></li>
+</ul>
+</div>
 
 <p>おはこんばんちわ。</p>
 <p>最近、競馬ばっかりやってましたが、そろそろ本業のマクロの方もやらないとなということで今回は日次GDP推計に使用するデータを総務省が公開している統計ダッシュボードから取ってきました。
@@ -968,9 +978,9 @@ plot.zoo(pc.xts,col=c(&quot;red&quot;,&quot;blue&quot;,&quot;green&quot;,&quot;p
 <p>第3主成分まででデータの約80％が説明できる結果を得たので、第3主成分までのプロットをお見せします。第1主成分（赤）はリーマンショックや東日本大震災、消費税増税のあたりで急上昇しています。ゆえに経済全体のリスクセンチメントを表しているのではないかと思っています。第2主成分（青）と第3主成分（緑）はリーマンショックのあたりで大きく落ち込んでいることは共通していますが2015年～現在の動きが大きく異なっています。また、第2主成分（青）はサンプル期間を通して過去トレンドを持つことから日本経済の潜在能力のようなものを表しているのではないでしょうか（そうするとリーマンショックまで上昇傾向にあることが疑問なのですが）。第3主成分（緑）はいまだ解読不能です（物価＆為替動向を表しているのではないかと思っています）。とりあえず今日はこれまで。次回はGianonne et. al.(2008)の日本版の再現を行いたいと思います。</p>
 </div>
 
-    </div>
+      </div>
 
-    
+      
 
 
 
@@ -978,6 +988,8 @@ plot.zoo(pc.xts,col=c(&quot;red&quot;,&quot;blue&quot;,&quot;green&quot;,&quot;p
 
 
 <div class="article-tags">
+  
+  <a class="badge badge-light" href="../../tag/r/">R</a>
   
   <a class="badge badge-light" href="../../tag/api/">API</a>
   
@@ -1203,7 +1215,7 @@ plot.zoo(pc.xts,col=c(&quot;red&quot;,&quot;blue&quot;,&quot;green&quot;,&quot;p
       
       <li><a href="../../post/post6/">Gianonne et. al. (2008)のマルチファクターモデルで四半期GDPを予想してみた</a></li>
       
-      <li><a href="../../post/post2/">Asset Allocation ModelをRで組んでみた。</a></li>
+      <li><a href="../../post/post9/">rvestでyahoo競馬にある過去のレース結果をクローリングしてみた</a></li>
       
     </ul>
   </div>
@@ -1213,8 +1225,9 @@ plot.zoo(pc.xts,col=c(&quot;red&quot;,&quot;blue&quot;,&quot;green&quot;,&quot;p
 
 
 
-  </div>
-</article>
+    </div>
+  </article>
+
 
       
 

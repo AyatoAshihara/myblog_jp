@@ -19,7 +19,16 @@
       <guid>/post/post7/</guid>
       <description>
 &lt;script src=&#34;index_files/header-attrs/header-attrs.js&#34;&gt;&lt;/script&gt;
+&lt;link href=&#34;index_files/pagedtable/css/pagedtable.css&#34; rel=&#34;stylesheet&#34; /&gt;
+&lt;script src=&#34;index_files/pagedtable/js/pagedtable.js&#34;&gt;&lt;/script&gt;
 
+&lt;div id=&#34;TOC&#34;&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;#先行研究と具体的にやりたいこと&#34;&gt;1. 先行研究と具体的にやりたいこと&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;#統計ダッシュボードからのデータの収集&#34;&gt;2. 統計ダッシュボードからのデータの収集&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;#得られたデータを主成分分析にかけてみる&#34;&gt;3. 得られたデータを主成分分析にかけてみる&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/div&gt;
 
 &lt;p&gt;おはこんばんちわ。&lt;/p&gt;
 &lt;p&gt;最近、競馬ばっかりやってましたが、そろそろ本業のマクロの方もやらないとなということで今回は日次GDP推計に使用するデータを総務省が公開している統計ダッシュボードから取ってきました。

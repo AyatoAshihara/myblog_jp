@@ -19,7 +19,16 @@
       <guid>/post/post8/</guid>
       <description>
 &lt;script src=&#34;index_files/header-attrs/header-attrs.js&#34;&gt;&lt;/script&gt;
+&lt;link href=&#34;index_files/pagedtable/css/pagedtable.css&#34; rel=&#34;stylesheet&#34; /&gt;
+&lt;script src=&#34;index_files/pagedtable/js/pagedtable.js&#34;&gt;&lt;/script&gt;
 
+&lt;div id=&#34;TOC&#34;&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;#gplvmとは&#34;&gt;1. GPLVMとは&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;#最もprimitiveなgp-lvm&#34;&gt;2. &lt;span&gt;最もPrimitiveなGP-LVM&lt;/span&gt;&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;#rでの実装&#34;&gt;3. Rでの実装&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/div&gt;
 
 &lt;p&gt;おはこんばんにちは。
 ずいぶん前にGianonne et al (2008)のマルチファクターモデルで四半期GDPの予想を行いました。

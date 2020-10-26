@@ -2,8 +2,8 @@
 title: "日次GDP推計に使用する経済統計を統計ダッシュボードから集めてみた"
 author: admin
 date: 2018-07-14T00:00:00Z
-categories: ["R","マクロ経済学","Webスクレイピング"]
-tags: ["API"]
+categories: ["マクロ経済学","Webスクレイピング"]
+tags: ["R","API"]
 draft: false
 featured: false
 image:
@@ -15,12 +15,23 @@ lastmod: ""
 projects: []
 summary: Rでデータ集めをします。データ分析はデータ集めと前処理が7割を占めるといわれる中、データ集めを自動化すべくウェブスクレイピングを行いました。
 output: 
-  html_document:
+  blogdown::html_page:
+    number_sections: false
     toc: true
+    df_print: "paged"
 ---
 
 <script src="index_files/header-attrs/header-attrs.js"></script>
+<link href="index_files/pagedtable/css/pagedtable.css" rel="stylesheet" />
+<script src="index_files/pagedtable/js/pagedtable.js"></script>
 
+<div id="TOC">
+<ul>
+<li><a href="#先行研究と具体的にやりたいこと">1. 先行研究と具体的にやりたいこと</a></li>
+<li><a href="#統計ダッシュボードからのデータの収集">2. 統計ダッシュボードからのデータの収集</a></li>
+<li><a href="#得られたデータを主成分分析にかけてみる">3. 得られたデータを主成分分析にかけてみる</a></li>
+</ul>
+</div>
 
 <p>おはこんばんちわ。</p>
 <p>最近、競馬ばっかりやってましたが、そろそろ本業のマクロの方もやらないとなということで今回は日次GDP推計に使用するデータを総務省が公開している統計ダッシュボードから取ってきました。

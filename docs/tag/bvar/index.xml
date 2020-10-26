@@ -19,7 +19,21 @@
       <guid>/post/post5/</guid>
       <description>
 &lt;script src=&#34;index_files/header-attrs/header-attrs.js&#34;&gt;&lt;/script&gt;
+&lt;link href=&#34;index_files/pagedtable/css/pagedtable.css&#34; rel=&#34;stylesheet&#34; /&gt;
+&lt;script src=&#34;index_files/pagedtable/js/pagedtable.js&#34;&gt;&lt;/script&gt;
 
+&lt;div id=&#34;TOC&#34;&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;#unrestricted-varについて&#34;&gt;1. Unrestricted VARについて&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;#bvarについて&#34;&gt;2. BVARについて&lt;/a&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;#具体的な推定方法カルマンフィルタ&#34;&gt;具体的な推定方法（カルマンフィルタ）&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;#カルマンフィルタの初期値をどのようにきめるか&#34;&gt;カルマンフィルタの初期値をどのようにきめるか&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;#ハイパーパラメータの決定方法とその評価尺度&#34;&gt;ハイパーパラメータの決定方法とその評価尺度&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;#rでの実装&#34;&gt;3. Rでの実装&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/div&gt;
 
 &lt;p&gt;　おはこんばんにちは。日次GDP推計を休日に進めているのですが、今日は少し勉強編で&lt;code&gt;BVAR&lt;/code&gt;についての記事を書きたいと思います。この&lt;code&gt;BVAR&lt;/code&gt;はFRBアトランタ連銀の&lt;code&gt;GDPNow&lt;/code&gt;でも使用されていることから、日次GDP推計との親和性も高いと思われます。そもそも、時系列でアウトサンプルの予測精度を上げたいということになると真っ先に思いつくのが&lt;code&gt;BVAR&lt;/code&gt;です。Doan, Litterman and Sims(1984)で提案されたこのモデルは予測精度が良いので、非常に有効な手段になると思われます。&lt;code&gt;BVAR&lt;/code&gt;は&lt;code&gt;Bayesian Vector Autoregression&lt;/code&gt;の略で、ベクトル自己回帰モデル（&lt;code&gt;VAR&lt;/code&gt;）の派生版です。&lt;code&gt;VAR&lt;/code&gt;とネットで調べるとまず&lt;code&gt;Value at Risk&lt;/code&gt;（&lt;code&gt;VaR&lt;/code&gt;）が出てくると思いますが、それとは違います。よく見るとaが小文字になっていることに気づくかと思います。
 　さて、&lt;code&gt;BVAR&lt;/code&gt;の説明をこれから行おうとするのですが、その前にまず基本的な&lt;code&gt;VAR&lt;/code&gt;の説明からしたいと思います。ただし、歴史的な背景（大型マクロ計量モデルからの経緯など）には触れません。あくまで、&lt;code&gt;BVAR&lt;/code&gt;を説明するうえで必要な知識について触れたいと思います。&lt;/p&gt;

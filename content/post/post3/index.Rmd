@@ -2,10 +2,11 @@
 title: "カルマンフィルタの実装"
 author: admin
 date: 2019-02-10T00:00:00Z
-categories: ["R","マクロ経済学"]
-tags: ["カルマンフィルタ"]
+categories: ["マクロ経済学"]
+tags: ["カルマンフィルタ","R"]
 draft: false
 featured: false
+slug: ["kalman_filter"]
 image:
   caption: ''
   focal_point: ""
@@ -14,9 +15,11 @@ image:
 lastmod: ""
 projects: []
 summary: 時系列解析には欠かせないカルマンフィルタ。Rでもパッケージが用意されていて非常に便利ですが、ここではいったん理解を優先し、カルマンフィルタの実装を行ってみたいと思います。
-output: 
-  html_document:
+output:
+  blogdown::html_page:
+    number_sections: false
     toc: true
+    df_print: "paged"
 ---
 
 おはこんばんにちは。かなり久しぶりの投稿となってしまいました。決して研究をさぼっていたのではなく、`BVAR`のコーディングに手こずっていました。あと少しで完成します。さて、今回は`BVAR`やこの前のGiannnone et a (2008)のような分析でも大活躍のカルマンフィルタを実装してしまいたいと思います。このブログではパッケージソフトに頼らず、基本的に自分で一から実装を行い、研究することをポリシーとしていますので、これから頻繁に使用するであろうカルマンフィルタを関数として実装してしまうことは非常に有益であると考えます。今回はRで実装をしましたので、そのご報告をします。

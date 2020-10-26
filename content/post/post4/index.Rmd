@@ -14,9 +14,11 @@ image:
 lastmod: ""
 projects: []
 summary: どうもはじめまして。このブログを始めるに当たってまずは自己紹介をしたいと思います。
-output:
+output: 
   blogdown::html_page:
-    highlight: tango
+    number_sections: false
+    toc: true
+    df_print: "paged"
 ---
 
 どうもはじめまして。
