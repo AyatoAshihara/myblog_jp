@@ -1,0 +1,274 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>前処理 | 東京の資産運用会社で働く社会人が研究に没頭するブログ</title>
+    <link>/tag/%E5%89%8D%E5%87%A6%E7%90%86/</link>
+      <atom:link href="/tag/%E5%89%8D%E5%87%A6%E7%90%86/index.xml" rel="self" type="application/rss+xml" />
+    <description>前処理</description>
+    <generator>Wowchemy (https://wowchemy.com)</generator><language>ja</language><lastBuildDate>Sat, 19 May 2018 00:00:00 +0000</lastBuildDate>
+    <image>
+      <url>/images/icon_hu0b7a4cb9992c9ac0e91bd28ffd38dd00_9727_512x512_fill_lanczos_center_2.png</url>
+      <title>前処理</title>
+      <link>/tag/%E5%89%8D%E5%87%A6%E7%90%86/</link>
+    </image>
+    
+    <item>
+      <title>rvestでyahoo競馬にある過去のレース結果をクローリングしてみた</title>
+      <link>/post/post9/</link>
+      <pubDate>Sat, 19 May 2018 00:00:00 +0000</pubDate>
+      <guid>/post/post9/</guid>
+      <description>
+&lt;script src=&#34;index_files/header-attrs/header-attrs.js&#34;&gt;&lt;/script&gt;
+
+
+&lt;p&gt;みなさん、おはこんばんにちは。&lt;/p&gt;
+&lt;p&gt;競馬のレース結果を的中させるモデルを作ろうということで研究をはじめましたが、まずはデータを自分で取ってくるところからやろうとおもいます。どこからデータを取ってくるのかという点が重要になるわけですが、データ先としてはdatascisotistさんがまとめられた非常にわかりやすい記事があります。どこからデータが取れるのかというと大きく分けて二つで、①JRA提供のJRA-VANや電子競馬新聞でおなじみの？JRJDといったデータベース、②netkeiba、yahoo競馬とといった競馬情報サイト、となっています。②の場合は自分でコードを書き、クローリングを行う必要があります。今回は②を選択し、yahoo競馬のデータをクローリングで落としてきたいと思います。Rでクローリングを行うパッケージとしては、rvest, httr, XMLがありますが、今回は1番簡単に使えるrvestを用います。yahoo競馬では以下のように各レース結果が表にまとめられています（5月の日本ダービーの結果）。&lt;/p&gt;
+&lt;p&gt;&lt;a href=&#34;https://keiba.yahoo.co.jp/race/result/1805021210/&#34;&gt;yahoo競馬&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;各馬のざっくりとした特徴やレース結果（通過順位等含む）、オッズが掲載されています。とりあえず、このぐらい情報があれば良いのではないかと思います（オッズの情報はもう少し欲しいのですが）。ただ、今後は少しずつ必要になった情報を拡充していこうとも思っています。1986年までのレース結果が格納されており、全データ数は50万件を超えるのではないかと思っています。ただ、単勝オッズが利用できるのは1994年からのようなので今回は1994年から直近までのデータを落としてきます。今回のゴールは、このデータをcsvファイル or SQLに格納することです。&lt;/p&gt;
+&lt;div id=&#34;rvestとは&#34; class=&#34;section level2&#34;&gt;
+&lt;h2&gt;1. Rvestとは&lt;/h2&gt;
+&lt;p&gt;Rvestとは、webスクレイピングパッケージの一種でdplyrでおなじみのHadley Wickhamさんによって作成されたパッケージです。たった数行でwebスクレイピングができる優れものとなっており、操作が非常に簡単であるのが特徴です。今回は以下の本を参考にしました。&lt;/p&gt;
+&lt;p&gt;&lt;a href=&#34;http://www.amazon.co.jp/exec/obidos/ASIN/486354216X/hatena-blog-22/&#34;&gt;Rによるスクレイピング入門&lt;/a&gt;
+&lt;img src=&#34;https://images-na.ssl-images-amazon.com/images/I/51ZBnu8oSvL._SX350_BO1,204,203,200_.jpg&#34; /&gt;&lt;/p&gt;
+&lt;p&gt;そもそも、htmlも大学1年生にやった程度でほとんど忘れていたのですが、この本はそこも非常にわかりやすく解説されており、非常に実践的な本だと思います。&lt;/p&gt;
+&lt;/div&gt;
+&lt;div id=&#34;レース結果をスクレイピングしてみる&#34; class=&#34;section level2&#34;&gt;
+&lt;h2&gt;2. レース結果をスクレイピングしてみる&lt;/h2&gt;
+&lt;p&gt;実際にyahoo競馬からデータを落としてみたいと思います。コードは以下のようになっています。ご留意頂きたいのはこのコードをそのまま使用してスクレイピングを行うことはご遠慮いただきたいという事です。webスクレイピングは高速でサイトにアクセスするため、サイトへの負荷が大きくなる可能性があります。スクレイピングを行う際は、時間を空けるコーディングするなどその点に留意をして行ってください（最悪訴えられる可能性がありますが、こちらは一切の責任を取りません）。&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;# rvestによる競馬データのwebスクレイピング
+
+#install.packages(&amp;quot;rvest&amp;quot;)
+#if (!require(&amp;quot;pacman&amp;quot;)) install.packages(&amp;quot;pacman&amp;quot;)
+pacman::p_load(qdapRegex)
+library(rvest)
+library(stringr)
+library(dplyr)&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;使用するパッケージは&lt;code&gt;qdapRegex&lt;/code&gt;、&lt;code&gt;rvest&lt;/code&gt;、&lt;code&gt;stringr&lt;/code&gt;、&lt;code&gt;dplyr&lt;/code&gt;です。&lt;code&gt;qdapRegex&lt;/code&gt;はカッコ内の文字を取り出すために使用しています。&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;keiba.yahoo &amp;lt;- read_html(str_c(&amp;quot;https://keiba.yahoo.co.jp/schedule/list/2016/?month=&amp;quot;,k))
+race_url &amp;lt;- keiba.yahoo %&amp;gt;%
+html_nodes(&amp;quot;a&amp;quot;) %&amp;gt;%
+html_attr(&amp;quot;href&amp;quot;) # 全urlを取得
+
+# レース結果のをurlを取得
+race_url &amp;lt;- race_url[str_detect(race_url, pattern=&amp;quot;result&amp;quot;)==1] # 「result」が含まれるurlを抽出&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;まず、read_htmlでyahoo競馬のレース結果一覧のhtml構造を引っ張ってきます（リンクは2016年1月の全レース）。ここで、kと出ているのは月を表し、k=1であれば2016年1月のレース結果を引っ張ってくるということです。keiba.yahooを覗いてみると以下のようにそのページ全体のhtml構造が格納されているのが分かります。&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;keiba.yahoo&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## {html_document}
+## &amp;lt;html xmlns=&amp;quot;http://www.w3.org/1999/xhtml&amp;quot;&amp;gt;
+## [1] &amp;lt;head&amp;gt;\n&amp;lt;!---京---&amp;gt;&amp;lt;meta http-equiv=&amp;quot;Content-Type&amp;quot; content=&amp;quot;text/html; cha ...
+## [2] &amp;lt;body&amp;gt;\n&amp;lt;noscript&amp;gt;\n  &amp;lt;iframe src=&amp;quot;//b.yjtag.jp/iframe?c=QXMP4c3&amp;quot; width=&amp;quot; ...&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;race_urlにはyahoo.keibaのうちの2016年k月にあった全レース結果のリンクを格納しています。html_nodeとはhtml構造のうちどの要素を引っ張るかを指定し、それを引っ張る関数で、簡単に言えばほしいデータの住所を入力する関数であると認識しています（おそらく正しくない）。ここではa要素を引っ張ることにしています。注意すべきことは、html_nodeは欲しい情報をhtml形式で引っ張ることです。なので、テキストデータとしてリンクを保存するためにはhtml_attrを使用する必要があります。html_attrの引数として、リンク属性を表すhrefを渡しています。これでレース結果のurlが取れたと思いきや、実はこれでは他のリンクもとってしまっています。一番わかりやすいのが広告のリンクです。こういったリンクは除外する必要があります。レース結果のurlには“result”が含まれているので、この文字が入っている要素だけを抽出したのが一番最後のコードです。&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;for (i in 1:length(race_url)){
+  race1 &amp;lt;- read_html(str_c(&amp;quot;https://keiba.yahoo.co.jp&amp;quot;,race_url[i])) # レース結果のurlを取得
+
+  # レース結果をスクレイピング
+  race_result &amp;lt;- race1 %&amp;gt;% html_nodes(xpath = &amp;quot;//table[@id = &amp;#39;raceScore&amp;#39;]&amp;quot;) %&amp;gt;%
+  html_table()
+  race_result &amp;lt;- do.call(&amp;quot;data.frame&amp;quot;,race_result) # リストをデータフレームに変更
+  colnames(race_result) &amp;lt;- c(&amp;quot;order&amp;quot;,&amp;quot;frame_number&amp;quot;,&amp;quot;horse_number&amp;quot;,&amp;quot;horse_name/age&amp;quot;,&amp;quot;time/margin&amp;quot;,&amp;quot;passing_rank/last_3F&amp;quot;,&amp;quot;jockey/weight&amp;quot;,&amp;quot;popularity/odds&amp;quot;,&amp;quot;trainer&amp;quot;) #　列名変更&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;さて、いよいよレース結果のスクレイピングを行います。さきほど取得したリンク先のhtml構造を一つ一つ取得し、その中で必要なテキスト情報を引っ張るという作業をRに実行させます（なのでループを使う）。race_1にはあるレース結果ページのhtml構造が格納されおり、race_resultにはその結果が入っています。html_nodesの引数に入っているxpathですが、これはXLMフォーマットのドキュメントから効率的に要素を抜き出す言語です。先ほど説明した住所のようなものと思っていただければ良いと思います。その横に書いてある&lt;code&gt;//table[@id = &#39;raceScore&#39;]&lt;/code&gt;が住所です。これはwebブラウザから簡単に探すことができます。Firefoxの説明になりますが、ほかのブラウザでも同じような機能があると思います。スクレイプしたい画面で&lt;code&gt;Ctrl+Shift+C&lt;/code&gt;を押すと下のような画面が表示されます。&lt;/p&gt;
+&lt;p&gt;このインスペクターの横のマークをクリックすると、カーソルで指した部分のhtml構造（住所）が表示されます。この場合だと、レース結果はtable属性の&lt;code&gt;id&lt;/code&gt;がraceScoreの場所に格納されていることが分かります。なので、上のコードでは&lt;code&gt;xpath=&lt;/code&gt;のところにそれを記述しているのです。そして、レース結果は表（table）形式でドキュメント化されているので、&lt;code&gt;html_table&lt;/code&gt;でごっそりとスクレイプしました。基本的にリスト形式で返されるので、それをデータフレームに変換し、適当に列名をつけています。&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;# 通過順位と上り3Fのタイム
+  race_result &amp;lt;- dplyr::mutate(race_result,passing_rank=as.character(str_extract_all(race_result$`passing_rank/last_3F`,&amp;quot;(\\d{2}-\\d{2}-\\d{2}-\\d{2})|(\\d{2}-\\d{2}-\\d{2})|(\\d{2}-\\d{2})&amp;quot;)))
+  race_result &amp;lt;- dplyr::mutate(race_result,last_3F=as.character(str_extract_all(race_result$`passing_rank/last_3F`,&amp;quot;\\d{2}\\.\\d&amp;quot;)))
+  race_result &amp;lt;- race_result[-6]
+
+# タイムと着差
+  race_result &amp;lt;- dplyr::mutate(race_result,time=as.character(str_extract_all(race_result$`time/margin`,&amp;quot;\\d\\.\\d{2}\\.\\d|\\d{2}\\.\\d&amp;quot;)))
+  race_result &amp;lt;- dplyr::mutate(race_result,margin=as.character(str_extract_all(race_result$`time/margin`,&amp;quot;./.馬身|.馬身|.[:space:]./.馬身|[ア-ン-]+&amp;quot;)))
+  race_result &amp;lt;- race_result[-5]
+
+# 馬名、馬齢、馬体重
+  race_result &amp;lt;- dplyr::mutate(race_result,horse_name=as.character(str_extract_all(race_result$`horse_name/age`,&amp;quot;[ァ-ヴー・]+&amp;quot;)))
+  race_result &amp;lt;- dplyr::mutate(race_result,horse_age=as.character(str_extract_all(race_result$`horse_name/age`,&amp;quot;牡\\d+|牝\\d+|せん\\d+&amp;quot;)))
+  race_result &amp;lt;- dplyr::mutate(race_result,horse_weight=as.character(str_extract_all(race_result$`horse_name/age`,&amp;quot;\\d{3}&amp;quot;)))
+  race_result &amp;lt;- dplyr::mutate(race_result,horse_weight_change=as.character(str_extract_all(race_result$`horse_name/age`,&amp;quot;\\([\\+|\\-]\\d+\\)|\\([\\d+]\\)&amp;quot;)))
+  race_result$horse_weight_change &amp;lt;- sapply(rm_round(race_result$horse_weight_change, extract=TRUE), paste, collapse=&amp;quot;&amp;quot;)
+  race_result &amp;lt;- race_result[-4]
+
+# ジョッキー
+  race_result &amp;lt;- dplyr::mutate(race_result,jockey=as.character(str_extract_all(race_result$`jockey/weight`,&amp;quot;[ぁ-ん一-龠]+\\s[ぁ-ん一-龠]+|[:upper:].[ァ-ヶー]+&amp;quot;)))
+  race_result &amp;lt;- race_result[-4]
+
+# オッズと人気
+  race_result &amp;lt;- dplyr::mutate(race_result,odds=as.character(str_extract_all(race_result$`popularity/odds`,&amp;quot;\\(.+\\)&amp;quot;)))
+  race_result &amp;lt;- dplyr::mutate(race_result,popularity=as.character(str_extract_all(race_result$`popularity/odds`,&amp;quot;\\d+[^(\\d+.\\d)]&amp;quot;)))
+  race_result$odds &amp;lt;- sapply(rm_round(race_result$odds, extract=TRUE), paste, collapse=&amp;quot;&amp;quot;)
+  race_result &amp;lt;- race_result[-4]&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;ここまででデータは取得できたわけなのですが、そのデータは綺麗なものにはなっていません。 上のコードでは、その整形作業を行っています。現在、取得したデータは以下のようになっています。&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;head(race_result)&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;##   order frame_number horse_number   trainer passing_rank last_3F   time
+## 1     1            2            2 河野 通文  06-07-06-06    35.1 3.19.7
+## 2     2            6            9   武 邦彦  06-05-04-04    35.7 3.19.9
+## 3     3            7           10 白井 寿昭  08-07-06-06    35.7 3.20.1
+## 4     4            7           11   矢野 進  03-03-03-02    36.3 3.20.4
+## 5     5            1            1 秋山 史郎  12-12-12-12    35.6 3.20.5
+## 6     6            5            7 須貝 彦三  11-10-06-06    36.1 3.20.5
+##         margin       horse_name horse_age horse_weight horse_weight_change
+## 1 character(0) センゴクシルバー       牡6          478                  +2
+## 2    1 1/4馬身     ジャムシード       牡6          480                   0
+## 3    1 1/2馬身   ホクセツギンガ       牡6          500                  +4
+## 4    1 3/4馬身     サマーワイン       牝5          422                  -4
+## 5      1/2馬身 ダイワジェームス       牡6          472                  +6
+## 6         ハナ   シゲノランボー       牡7          438                  -6
+##        jockey odds popularity     race_date
+## 1   田中 勝春  2.3         1  1994年1月31日
+## 2   柴田 政人   14         7  1994年1月31日
+## 3   小屋敷 昭  7.5         3  1994年1月31日
+## 4   木幡 初広 32.6         9  1994年1月31日
+## 5 大塚 栄三郎  5.9         2  1994年1月31日
+## 6   須貝 尚介  8.7         4  1994年1月31日
+##                              race_name
+## 1 第44回ダイヤモンドステークス（GIII）
+## 2 第44回ダイヤモンドステークス（GIII）
+## 3 第44回ダイヤモンドステークス（GIII）
+## 4 第44回ダイヤモンドステークス（GIII）
+## 5 第44回ダイヤモンドステークス（GIII）
+## 6 第44回ダイヤモンドステークス（GIII）&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;ご覧のように、&lt;code&gt;\n&lt;/code&gt;が入っていたり、通過順位と上り3ハロンのタイムが一つのセルに入っていたりとこのままでは分析ができません。不要なものを取り除いたり、データを二つに分割する作業が必要になります。今回の記事ではこの部分について詳しくは説明しません。この部分は正規表現を駆使する必要がありますが、私自身全く詳しくないからです。今回も手探りでやりました。&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;# レース情報
+  race_date &amp;lt;- race1 %&amp;gt;% html_nodes(xpath = &amp;quot;//div[@id = &amp;#39;raceTitName&amp;#39;]/p[@id = &amp;#39;raceTitDay&amp;#39;]&amp;quot;) %&amp;gt;%
+    html_text()
+  race_name &amp;lt;- race1 %&amp;gt;% html_nodes(xpath = &amp;quot;//div[@id = &amp;#39;raceTitName&amp;#39;]/h1[@class = &amp;#39;fntB&amp;#39;]&amp;quot;) %&amp;gt;%
+    html_text()
+
+  race_result &amp;lt;- dplyr::mutate(race_result,race_date=as.character(str_extract_all(race_date,&amp;quot;\\d+年\\d+月\\d+日&amp;quot;)))
+  race_result &amp;lt;- dplyr::mutate(race_result,race_name=as.character(str_replace_all(race_name,&amp;quot;\\s&amp;quot;,&amp;quot;&amp;quot;)))
+
+# ファイル格納
+  if (k ==1 &amp;amp;&amp;amp; i == 1){
+    dataset &amp;lt;- race_result
+  } else {
+    dataset &amp;lt;- rbind(dataset,race_result)
+  }# if文の終わり
+} # iループの終わり
+
+    write.csv(race_result,&amp;quot;race_result.csv&amp;quot;)&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;最後に、レース日時とレース名を抜き出し、データを一時的に格納するコードとcsvファイルに書き出すコードを書いて終了です。完成データセットは以下のような状態になっています。&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;head(dataset)&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;##   order frame_number horse_number   trainer passing_rank last_3F   time
+## 1     1            8           11 森安 弘昭  01-01-01-01    35.7 2.00.7
+## 2     2            5            6   矢野 進  06-06-04-03    35.3 2.00.8
+## 3     3            4            4   新関 力  03-03-02-02    35.8 2.01.1
+## 4     4            8           12 大和田 稔  02-02-03-03    35.7 2.01.1
+## 5     5            7            9 田中 和夫  07-07-07-05    35.8 2.01.6
+## 6     6            3            3 中島 敏文  09-10-10-09    35.5 2.01.7
+##         margin         horse_name horse_age horse_weight horse_weight_change
+## 1 character(0)       ヒダカハヤト       牡8          488                  -2
+## 2      3/4馬身   ステージチャンプ       牡5          462                 +14
+## 3    1 3/4馬身   マキノトウショウ       牡5          502                  +6
+## 4         ハナ           ペガサス       牡5          464                  +4
+## 5        3馬身 シャマードシンボリ       牡7          520                  +4
+## 6      3/4馬身       モンタミール       牡7          474                  +4
+##        jockey odds popularity    race_date                        race_name
+## 1 大塚 栄三郎   29        10  1994年1月5日 第43回日刊スポーツ賞金杯（GIII）
+## 2   岡部 幸雄  3.2         1  1994年1月5日 第43回日刊スポーツ賞金杯（GIII）
+## 3     的場 均  6.9         4  1994年1月5日 第43回日刊スポーツ賞金杯（GIII）
+## 4   安田 富男  5.7         2  1994年1月5日 第43回日刊スポーツ賞金杯（GIII）
+## 5     田中 剛 29.6        12  1994年1月5日 第43回日刊スポーツ賞金杯（GIII）
+## 6   蓑田 早人 10.4         6  1994年1月5日 第43回日刊スポーツ賞金杯（GIII）&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;以上です。次回はこのデータセットを使用して、分析を行っていきます。次回までには1994年からのデータを全てスクレイピングしてきます。&lt;/p&gt;
+&lt;p&gt;【追記（2018/6/10）】&lt;/p&gt;
+&lt;p&gt;上述したスクリプトを用いて、スクレイピングを行ったところエラーが出ました。どうやらレース結果の中には強風などで中止になったものも含まれているらしく、そこでエラーが出る様子（race_resultがcharacter(0)になってしまう）。なので、この部分を修正したスクリプトを以下で公開しておきます。こちらは私の PC環境では正常に作動しています。&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;# rvestによる競馬データのwebスクレイピング
+
+#install.packages(&amp;quot;rvest&amp;quot;)
+#if (!require(&amp;quot;pacman&amp;quot;)) install.packages(&amp;quot;pacman&amp;quot;)
+  install.packages(&amp;quot;beepr&amp;quot;)
+  pacman::p_load(qdapRegex)
+  library(rvest)
+  library(stringr)
+  library(dplyr)
+  library(beepr)
+
+# pathの設定
+  setwd(&amp;quot;C:/Users/assiy/Dropbox/競馬統計解析&amp;quot;)
+
+  for(year in 1994:2018){
+
+  # yahoo競馬のレース結果一覧ページの取得
+  for (k in 1:12){
+
+    keiba.yahoo &amp;lt;- read_html(str_c(&amp;quot;https://keiba.yahoo.co.jp/schedule/list/&amp;quot;, year,&amp;quot;/?month=&amp;quot;,k))
+    race_url &amp;lt;- keiba.yahoo %&amp;gt;%
+    html_nodes(&amp;quot;a&amp;quot;) %&amp;gt;%
+    html_attr(&amp;quot;href&amp;quot;) # 全urlを取得
+
+    # レース結果のをurlを取得
+    race_url &amp;lt;- race_url[str_detect(race_url, pattern=&amp;quot;result&amp;quot;)==1] # 「result」が含まれるurlを抽出
+
+    for (i in 1:length(race_url)){
+
+    Sys.sleep(10)
+    print(str_c(&amp;quot;現在、&amp;quot;, year, &amp;quot;年&amp;quot;, k, &amp;quot;月&amp;quot;, i,&amp;quot;番目のレースの保存中です&amp;quot;))
+
+    race1 &amp;lt;- read_html(str_c(&amp;quot;https://keiba.yahoo.co.jp&amp;quot;,race_url[i])) # レース結果のurlを取得
+
+    # レースが中止でなければ処理を実行
+    if (identical(race1 %&amp;gt;%
+    html_nodes(xpath = &amp;quot;//div[@class = &amp;#39;resultAtt mgnBL fntSS&amp;#39;]&amp;quot;) %&amp;gt;%
+    html_text(),character(0)) == TRUE){
+
+    # レース結果をスクレイピング
+    race_result &amp;lt;- race1 %&amp;gt;% html_nodes(xpath = &amp;quot;//table[@id = &amp;#39;raceScore&amp;#39;]&amp;quot;) %&amp;gt;%
+    html_table()
+    race_result &amp;lt;- do.call(&amp;quot;data.frame&amp;quot;,race_result) # リストをデータフレームに変更
+    colnames(race_result) &amp;lt;- c(&amp;quot;order&amp;quot;,&amp;quot;frame_number&amp;quot;,&amp;quot;horse_number&amp;quot;,&amp;quot;horse_name/age&amp;quot;,&amp;quot;time/margin&amp;quot;,&amp;quot;passing_rank/last_3F&amp;quot;,&amp;quot;jockey/weight&amp;quot;,&amp;quot;popularity/odds&amp;quot;,&amp;quot;trainer&amp;quot;) #　列名変更
+
+    # 通過順位と上り3Fのタイム
+    race_result &amp;lt;- dplyr::mutate(race_result,passing_rank=as.character(str_extract_all(race_result$`passing_rank/last_3F`,&amp;quot;(\\d{2}-\\d{2}-\\d{2}-\\d{2})|(\\d{2}-\\d{2}-\\d{2})|(\\d{2}-\\d{2})&amp;quot;)))
+    race_result &amp;lt;- dplyr::mutate(race_result,last_3F=as.character(str_extract_all(race_result$`passing_rank/last_3F`,&amp;quot;\\d{2}\\.\\d&amp;quot;)))
+    race_result &amp;lt;- race_result[-6]
+
+    # タイムと着差
+    race_result &amp;lt;- dplyr::mutate(race_result,time=as.character(str_extract_all(race_result$`time/margin`,&amp;quot;\\d\\.\\d{2}\\.\\d|\\d{2}\\.\\d&amp;quot;)))
+    race_result &amp;lt;- dplyr::mutate(race_result,margin=as.character(str_extract_all(race_result$`time/margin`,&amp;quot;./.馬身|.馬身|.[:space:]./.馬身|[ア-ン-]+&amp;quot;)))
+    race_result &amp;lt;- race_result[-5]
+
+    # 馬名、馬齢、馬体重
+    race_result &amp;lt;- dplyr::mutate(race_result,horse_name=as.character(str_extract_all(race_result$`horse_name/age`,&amp;quot;[ァ-ヴー・]+&amp;quot;)))
+    race_result &amp;lt;- dplyr::mutate(race_result,horse_age=as.character(str_extract_all(race_result$`horse_name/age`,&amp;quot;牡\\d+|牝\\d+|せん\\d+&amp;quot;)))
+    race_result &amp;lt;- dplyr::mutate(race_result,horse_weight=as.character(str_extract_all(race_result$`horse_name/age`,&amp;quot;\\d{3}&amp;quot;)))
+    race_result &amp;lt;- dplyr::mutate(race_result,horse_weight_change=as.character(str_extract_all(race_result$`horse_name/age`,&amp;quot;\\([\\+|\\-]\\d+\\)|\\([\\d+]\\)&amp;quot;)))
+    race_result$horse_weight_change &amp;lt;- sapply(rm_round(race_result$horse_weight_change, extract=TRUE), paste, collapse=&amp;quot;&amp;quot;)
+    race_result &amp;lt;- race_result[-4]
+
+    # ジョッキー
+    race_result &amp;lt;- dplyr::mutate(race_result,jockey=as.character(str_extract_all(race_result$`jockey/weight`,&amp;quot;[ぁ-ん一-龠]+\\s[ぁ-ん一-龠]+|[:upper:].[ァ-ヶー]+&amp;quot;)))
+    race_result &amp;lt;- race_result[-4]
+
+    # オッズと人気
+    race_result &amp;lt;- dplyr::mutate(race_result,odds=as.character(str_extract_all(race_result$`popularity/odds`,&amp;quot;\\(.+\\)&amp;quot;)))
+    race_result &amp;lt;- dplyr::mutate(race_result,popularity=as.character(str_extract_all(race_result$`popularity/odds`,&amp;quot;\\d+[^(\\d+.\\d)]&amp;quot;)))
+    race_result$odds &amp;lt;- sapply(rm_round(race_result$odds, extract=TRUE), paste, collapse=&amp;quot;&amp;quot;)
+    race_result &amp;lt;- race_result[-4]
+
+    # レース情報
+    race_date &amp;lt;- race1 %&amp;gt;% html_nodes(xpath = &amp;quot;//div[@id = &amp;#39;raceTitName&amp;#39;]/p[@id = &amp;#39;raceTitDay&amp;#39;]&amp;quot;) %&amp;gt;%
+    html_text()
+    race_name &amp;lt;- race1 %&amp;gt;% html_nodes(xpath = &amp;quot;//div[@id = &amp;#39;raceTitName&amp;#39;]/h1[@class = &amp;#39;fntB&amp;#39;]&amp;quot;) %&amp;gt;%
+    html_text()
+
+    race_result &amp;lt;- dplyr::mutate(race_result,race_date=as.character(str_extract_all(race_date,&amp;quot;\\d+年\\d+月\\d+日&amp;quot;)))
+    race_result &amp;lt;- dplyr::mutate(race_result,race_name=as.character(str_replace_all(race_name,&amp;quot;\\s&amp;quot;,&amp;quot;&amp;quot;)))
+
+    ## ファイル貯めるのかく
+    if (k == 1 &amp;amp;&amp;amp; i == 1 &amp;amp;&amp;amp; year == 1994){
+    dataset &amp;lt;- race_result
+    } else {
+    dataset &amp;lt;- rbind(dataset,race_result)
+    } # if文2の終わり
+    } # if文1の終わり
+    } # iループの終わり
+    } # kループの終わり
+    beep()
+    } # yearループの終わり
+
+    write.csv(dataset,&amp;quot;race_result.csv&amp;quot;, row.names = FALSE)&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;これを回すのに16時間かかりました（笑）データ数は想定していたよりは少なく、97939になりました。&lt;/p&gt;
+&lt;/div&gt;
+</description>
+    </item>
+    
+  </channel>
+</rss>

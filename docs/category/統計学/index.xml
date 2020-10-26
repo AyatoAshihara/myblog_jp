@@ -2,21 +2,21 @@
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
     <title>統計学 | 東京の資産運用会社で働く社会人が研究に没頭するブログ</title>
-    <link>https://ayatoashihara.github.io/myblog_jp/category/%E7%B5%B1%E8%A8%88%E5%AD%A6/</link>
-      <atom:link href="https://ayatoashihara.github.io/myblog_jp/category/%E7%B5%B1%E8%A8%88%E5%AD%A6/index.xml" rel="self" type="application/rss+xml" />
+    <link>/category/%E7%B5%B1%E8%A8%88%E5%AD%A6/</link>
+      <atom:link href="/category/%E7%B5%B1%E8%A8%88%E5%AD%A6/index.xml" rel="self" type="application/rss+xml" />
     <description>統計学</description>
     <generator>Wowchemy (https://wowchemy.com)</generator><language>ja</language><lastBuildDate>Sat, 01 Dec 2018 00:00:00 +0000</lastBuildDate>
     <image>
-      <url>https://ayatoashihara.github.io/myblog_jp/images/icon_hu0b7a4cb9992c9ac0e91bd28ffd38dd00_9727_512x512_fill_lanczos_center_2.png</url>
+      <url>/images/icon_hu0b7a4cb9992c9ac0e91bd28ffd38dd00_9727_512x512_fill_lanczos_center_2.png</url>
       <title>統計学</title>
-      <link>https://ayatoashihara.github.io/myblog_jp/category/%E7%B5%B1%E8%A8%88%E5%AD%A6/</link>
+      <link>/category/%E7%B5%B1%E8%A8%88%E5%AD%A6/</link>
     </image>
     
     <item>
       <title>BVARについて</title>
-      <link>https://ayatoashihara.github.io/myblog_jp/post/post5/</link>
+      <link>/post/post5/</link>
       <pubDate>Sat, 01 Dec 2018 00:00:00 +0000</pubDate>
-      <guid>https://ayatoashihara.github.io/myblog_jp/post/post5/</guid>
+      <guid>/post/post5/</guid>
       <description>
 &lt;script src=&#34;index_files/header-attrs/header-attrs.js&#34;&gt;&lt;/script&gt;
 

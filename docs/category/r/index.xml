@@ -2,21 +2,21 @@
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
     <title>R | 東京の資産運用会社で働く社会人が研究に没頭するブログ</title>
-    <link>https://ayatoashihara.github.io/myblog_jp/category/r/</link>
-      <atom:link href="https://ayatoashihara.github.io/myblog_jp/category/r/index.xml" rel="self" type="application/rss+xml" />
+    <link>/category/r/</link>
+      <atom:link href="/category/r/index.xml" rel="self" type="application/rss+xml" />
     <description>R</description>
     <generator>Wowchemy (https://wowchemy.com)</generator><language>ja</language><lastBuildDate>Sun, 26 May 2019 00:00:00 +0000</lastBuildDate>
     <image>
-      <url>https://ayatoashihara.github.io/myblog_jp/images/icon_hu0b7a4cb9992c9ac0e91bd28ffd38dd00_9727_512x512_fill_lanczos_center_2.png</url>
+      <url>/images/icon_hu0b7a4cb9992c9ac0e91bd28ffd38dd00_9727_512x512_fill_lanczos_center_2.png</url>
       <title>R</title>
-      <link>https://ayatoashihara.github.io/myblog_jp/category/r/</link>
+      <link>/category/r/</link>
     </image>
     
     <item>
       <title>GPLVMでマルチファクターモデルを構築してみた</title>
-      <link>https://ayatoashihara.github.io/myblog_jp/post/post8/</link>
+      <link>/post/post8/</link>
       <pubDate>Sun, 26 May 2019 00:00:00 +0000</pubDate>
-      <guid>https://ayatoashihara.github.io/myblog_jp/post/post8/</guid>
+      <guid>/post/post8/</guid>
       <description>
 &lt;script src=&#34;index_files/header-attrs/header-attrs.js&#34;&gt;&lt;/script&gt;
 
@@ -444,9 +444,9 @@ for (i in as.list(seq(as.Date(&amp;quot;2015-04-01&amp;quot;),as.Date(&amp;quot;
     
     <item>
       <title>Asset Allocation ModelをRで組んでみた。</title>
-      <link>https://ayatoashihara.github.io/myblog_jp/post/post2/</link>
+      <link>/post/post2/</link>
       <pubDate>Sun, 17 Feb 2019 00:00:00 +0000</pubDate>
-      <guid>https://ayatoashihara.github.io/myblog_jp/post/post2/</guid>
+      <guid>/post/post2/</guid>
       <description>
 &lt;script src=&#34;index_files/header-attrs/header-attrs.js&#34;&gt;&lt;/script&gt;
 
@@ -838,9 +838,9 @@ d_allocation(riskparity_weight, &amp;quot;Risk Parity Asset Allocation&amp;quot;
     
     <item>
       <title>カルマンフィルタの実装</title>
-      <link>https://ayatoashihara.github.io/myblog_jp/post/post3/</link>
+      <link>/post/post3/</link>
       <pubDate>Sun, 10 Feb 2019 00:00:00 +0000</pubDate>
-      <guid>https://ayatoashihara.github.io/myblog_jp/post/post3/</guid>
+      <guid>/post/post3/</guid>
       <description>
 &lt;script src=&#34;index_files/header-attrs/header-attrs.js&#34;&gt;&lt;/script&gt;
 
@@ -1305,12 +1305,20 @@ a_{t|T} &amp;amp;=&amp;amp; a_{t|t} + L_{t}(a_{t+1|T} - a_{t+1|t}) \\
     
     <item>
       <title>ガウス回帰の実装をやってみた</title>
-      <link>https://ayatoashihara.github.io/myblog_jp/post/post1/</link>
+      <link>/post/post1/</link>
       <pubDate>Sun, 02 Dec 2018 00:00:00 +0000</pubDate>
-      <guid>https://ayatoashihara.github.io/myblog_jp/post/post1/</guid>
+      <guid>/post/post1/</guid>
       <description>
 &lt;script src=&#34;index_files/header-attrs/header-attrs.js&#34;&gt;&lt;/script&gt;
+&lt;link href=&#34;index_files/pagedtable/css/pagedtable.css&#34; rel=&#34;stylesheet&#34; /&gt;
+&lt;script src=&#34;index_files/pagedtable/js/pagedtable.js&#34;&gt;&lt;/script&gt;
 
+&lt;div id=&#34;TOC&#34;&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;#gprとは&#34;&gt;1. &lt;code&gt;GPR&lt;/code&gt;とは&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;#gprの実装&#34;&gt;2. &lt;code&gt;GPR&lt;/code&gt;の実装&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/div&gt;
 
 &lt;p&gt;　おはこんばんにちは。昨日、&lt;code&gt;Bayesian Vector Autoregression&lt;/code&gt;の記事を書きました。&lt;br /&gt;
 　その中でハイパーパラメータのチューニングの話が出てきて、なにか効率的にチューニングを行う方法はないかと探していた際に&lt;code&gt;Bayesian Optimization&lt;/code&gt;を発見しました。日次GDPでも機械学習の手法を利用しようと思っているので、&lt;code&gt;Bayesian Optimization&lt;/code&gt;はかなり使える手法ではないかと思い、昨日徹夜で理解しました。&lt;br /&gt;
@@ -1541,9 +1549,9 @@ print(g(0,1,curve_fitting$x,curve_fitting$t), vp=viewport(layout.pos.row=1, layo
     
     <item>
       <title>Gianonne et. al. (2008)のマルチファクターモデルで四半期GDPを予想してみた</title>
-      <link>https://ayatoashihara.github.io/myblog_jp/post/post6/</link>
+      <link>/post/post6/</link>
       <pubDate>Mon, 16 Jul 2018 00:00:00 +0000</pubDate>
-      <guid>https://ayatoashihara.github.io/myblog_jp/post/post6/</guid>
+      <guid>/post/post6/</guid>
       <description>
 &lt;script src=&#34;index_files/header-attrs/header-attrs.js&#34;&gt;&lt;/script&gt;
 
@@ -1837,9 +1845,9 @@ plot.zoo(pred1.GDP.xts,col = c(&amp;quot;red&amp;quot;,&amp;quot;blue&amp;quot;)
     
     <item>
       <title>日次GDP推計に使用する経済統計を統計ダッシュボードから集めてみた</title>
-      <link>https://ayatoashihara.github.io/myblog_jp/post/post7/</link>
+      <link>/post/post7/</link>
       <pubDate>Sat, 14 Jul 2018 00:00:00 +0000</pubDate>
-      <guid>https://ayatoashihara.github.io/myblog_jp/post/post7/</guid>
+      <guid>/post/post7/</guid>
       <description>
 &lt;script src=&#34;index_files/header-attrs/header-attrs.js&#34;&gt;&lt;/script&gt;
 
